@@ -12,8 +12,8 @@ except AttributeError:
 LABEL = "/home/grimel/Desktop/label.png"
 #SAVE_PATH = "/output/"
 SAVE_PATH = "/home/grimel/Desktop"
-FONT = "/home/grimel/Desktop/resources/DroidSerif-Bold.ttf"
-
+FONT = "/home/grimel/Desktop/resources/DroidSerif-Regular.ttf"
+ICON = "/home/grimel/Desktop/resources/Kindle.png"
 class Window(QtGui.QMainWindow):
     
     def __init__(self):
@@ -29,8 +29,6 @@ class Window(QtGui.QMainWindow):
         
         self.text_x = 10
         self.text_y = 10
-        self.max_x = 600
-        self.max_y = 800
         self.text_color = None
         self.is_label = True
         self.is_text = False
@@ -46,6 +44,7 @@ class Window(QtGui.QMainWindow):
                                                           "ᐊ" : (-10, 0),
                                                           "ᐅ" : (10, 0),
                                                           "ᐁ": (0, 10)}
+
     def initUI(self):
         self.centralWidget = QtGui.QWidget(self)
         self.centralWidget.setObjectName("centralWidget")
@@ -110,6 +109,7 @@ class Window(QtGui.QMainWindow):
         self.radio_White = QtGui.QRadioButton(self.centralWidget)
         self.radio_White.setMinimumSize(QtCore.QSize(0, 20))
         self.radio_White.setObjectName(_fromUtf8("radio_White"))
+        self.radio_White.setChecked(True)
         self.buttonGroup_TextColor = QtGui.QButtonGroup(self)
         self.buttonGroup_TextColor.setObjectName(_fromUtf8("buttonGroup_TextColor"))
         
@@ -267,6 +267,7 @@ class Window(QtGui.QMainWindow):
 
     def retranslateUi(self):
         self.setWindowTitle("MainWindow")
+        self.setWindowIcon(QtGui.QIcon(ICON))
         self.button_open.setText("Open...")
         self.label_name.setText("Name")
         self.label_surname.setText("Surname")
@@ -333,20 +334,25 @@ class Window(QtGui.QMainWindow):
         self.open_path.setText(self.file_path)
         self.statusBar.showMessage("Opened file")
     
-    def redraw(self):
+    def redraw(self, glob_redraw=False):
         
         self.is_label = self.check_slide.isChecked()
         self.is_text = self.name.text() or self.surname.text()
         self.pic = Image.open(self.file_path)
         self.pic = self.pic.convert("RGBA")
-        self.pic = self.pic.resize((600, 800))
+        if glob_redraw:
+            self.resizeImage()
+        else:
+            if self.pic.size != (600, 800):
+                self.pic = self.pic.resize((600, 800))
+        
         if self.is_label:
-            self.pic.paste(self.label, (0, 746), mask= self.label)
+            self.pic.paste(self.label, (0, self.pic.size[1] - self.label.size[1]), mask= self.label)
         
         if self.is_text:
-            size = 30
+            size = 40
             draw = ImageDraw.Draw(self.pic)
-            font = ImageFont.truetype('/home/grimel/Desktop/resources/DroidSerif-Bold.ttf', size)
+            font = ImageFont.truetype(FONT, size)
             text_color = "White"
             if self.radio_Black.isChecked():
                 text_color = "Black"
@@ -380,7 +386,6 @@ class Window(QtGui.QMainWindow):
         font = font
         size_x = self.pic.size[0] - 10
         size_y = self.pic.size[1] - 10 - self.label.size[1]
-        print(size_x)
         text_height = 0
         text_lenght = 0
         name = self.name.text()
@@ -395,7 +400,7 @@ class Window(QtGui.QMainWindow):
             text_height = 2*size
         else:
             text_height = size
-        print(font.getsize(name))
+        
         if len(name) >= len(surname):
             text_lenght = font.getsize(name)[0]
         else:
@@ -420,9 +425,25 @@ class Window(QtGui.QMainWindow):
         
     def saveImage(self):
         
-        self.resizeImage()
-        self.pic.save("/home/grimel/Desktop/Some.png")
-        self.statusBar.showMessage("File created!")
+        default = "Sample"
+        name = ""
+        self.redraw(glob_redraw=True)
+        if self.name.text():
+            name+=self.name.text()
+        if self.surname.text():
+            name+= ' ' + self.surname.text()
+        if not name:
+            name = default
+        name += ' ' + str(self.pic.size[1]) + 'x' + str(self.pic.size[0])
+              
+        if path.isfile(path.join(SAVE_PATH, name + ".png")):
+            i = 2
+            while path.isfile(path.join(SAVE_PATH, name+'-' + str(i) + '.png')):
+                i+=1
+            name+= '-' + str(i)
+        name +=".png"
+        self.pic.save(path.join(SAVE_PATH, name))
+        self.statusBar.showMessage("File " + name +" created!")
     
     def resizeImage(self):
         s = self.combo_versionKindle.currentText()
@@ -430,10 +451,10 @@ class Window(QtGui.QMainWindow):
         height = int(re.search(pattern, s).group(1))
         width = int(re.search(pattern, s).group(2))
         self.pic = self.pic.convert("RGB")
-        if height > self.pic.size[1]:
-            self.pic = self.pic.resize((width, height), Image.BICUBIC)
-        else:
-            self.pic = self.pic.resize((width, height), Image.ANTIALIAS)
+        #upscaling
+        self.pic = self.pic.resize((width, height), Image.BICUBIC)
+        #downscaling
+        #self.pic = self.pic.resize((width, height), Image.ANTIALIAS)
         self.pic = self.pic.convert("RGBA")
             
     def initActions(self):
