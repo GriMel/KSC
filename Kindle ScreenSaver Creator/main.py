@@ -11,6 +11,7 @@ except AttributeError:
     
 LABEL = "/home/grimel/Desktop/label.png"
 SAVE_PATH = "/output/"
+FONT = "/home/grimel/Desktop/resources/DroidSerif-Bold.ttf"
 
 class Window(QtGui.QMainWindow):
     
@@ -19,23 +20,31 @@ class Window(QtGui.QMainWindow):
         self.im = ""
         self.initUI()
         self.retranslateUi()
+        self.setState(False)
         self.initActions()
         self.initVariables()
         
     def initVariables(self):
         
-        self.text_x = 0
-        self.text_y = 0
+        self.text_x = 10
+        self.text_y = 10
         self.max_x = 600
         self.max_y = 800
-        self.font_size = 20
-        self.font = QtGui.QFont("Verdana")
-        self.text_color = "White"
+        self.text_color = None
         self.is_label = True
-        self.pic = ""
-        self.clear_pic = ""
+        self.is_text = False
+        self.pic = None
+        self.clear_pic = None
         self.label = Image.open(LABEL).convert("RGBA")
-        
+        self.file_path = None
+        self.default_coord = {"Left Upper" : (10, 10),
+                              "Left Lower" : (10, 650),
+                              "Right Upper" : (500, 10),
+                              "Right Lower" : (500, 650)}
+        self.default_move = {"ᐃ"  : (0, -10),
+                                                          "ᐊ" : (-10, 0),
+                                                          "ᐅ" : (10, 0),
+                                                          "ᐁ": (0, 10)}
     def initUI(self):
         self.centralWidget = QtGui.QWidget(self)
         self.centralWidget.setObjectName("centralWidget")
@@ -180,6 +189,7 @@ class Window(QtGui.QMainWindow):
         self.combo_versionKindle.setObjectName(_fromUtf8("combo_versionKindle"))
         self.combo_versionKindle.addItem(_fromUtf8(""))
         self.combo_versionKindle.addItem(_fromUtf8(""))
+        self.combo_versionKindle.addItem(_fromUtf8(""))
         self.version_HorLayout.addWidget(self.combo_versionKindle)
         self.LeftVertLayout.addLayout(self.version_HorLayout)
         self.line_5 = QtGui.QFrame(self.centralWidget)
@@ -268,8 +278,10 @@ class Window(QtGui.QMainWindow):
         self.radio_leftlower.setText("Left Lower")
         self.radio_rightupper.setText("Right Upper")
         self.label_versionKindle.setText("Version of Kindle")
-        self.combo_versionKindle.setItemText(0, "Kindle 3 (800 x 600)")
-        self.combo_versionKindle.setItemText(1, "Kindle DX (1024 x 842)")
+        self.combo_versionKindle.setItemText(0, "Kindle 3, 4, 5, Touch (800 x 600)")
+        self.combo_versionKindle.setItemText(1, "Kindle DX (1200 x 824)")
+        self.combo_versionKindle.setItemText(2, "Kindle Paperwhite (1024 x 768)")
+        
         self.check_slide.setText("Slide and release the power to wake")
         self.button_create.setText("Create")
         self.picture_label.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
@@ -279,69 +291,124 @@ class Window(QtGui.QMainWindow):
         self.button_down.setText("ᐁ")
         self.menuMain.setTitle("Main")
         self.action_Exit.setText("&Exit")
-    
+        
+    def setState(self, enabled):
+                      
+        self.name.setEnabled(enabled)
+        self.surname.setEnabled(enabled)
+        self.radio_leftlower.setEnabled(enabled)
+        self.radio_leftupper.setEnabled(enabled)
+        self.radio_rightlower.setEnabled(enabled)
+        self.radio_rightupper.setEnabled(enabled)
+        self.radio_Black.setEnabled(enabled)
+        self.radio_White.setEnabled(enabled)
+        self.combo_versionKindle.setEnabled(enabled)
+        self.check_slide.setEnabled(enabled)
+        self.button_left.setEnabled(enabled)
+        self.button_right.setEnabled(enabled)
+        self.button_up.setEnabled(enabled)
+        self.button_down.setEnabled(enabled)
+
     def putImage(self):
+        
         pixmap = QtGui.QPixmap.fromImage(ImageQt.ImageQt(self.pic))
         pixmap = pixmap.scaled(self.picture_label.size())
         self.picture_label.setPixmap(pixmap)
     
     def openImage(self):
         try:
-            fname = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
+            self.file_path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
         except:
             self.statusBar.showMessage('Wrong file name')
         
-        self.open_path.setText(fname)
+        self.setState(enabled=True)
+        self.redraw()
+        
+        self.open_path.setText(self.file_path)
         self.statusBar.showMessage("Opened file")
-        self.pic = Image.open(fname)
-        self.clear_pic = Image.open(fname)
-        #self.pic = self.pic.convert("RGBA")
-        self.pic = self.pic.convert("RGB")
-        self.pic = self.pic.resize((600, 800))
+    
+    def redraw(self):
+        
+        self.is_label = self.check_slide.isChecked()
+        self.is_text = bool(self.name.text() or self.surname.text())
+        self.pic = Image.open(self.file_path)
         self.pic = self.pic.convert("RGBA")
-        self.changeLabel()
+        self.pic = self.pic.resize((600, 800))
+        if self.is_label:
+            self.pic.paste(self.label, (0, 746), mask= self.label)
+        
+        if self.is_text:
+            if self.radio_Black.isChecked():
+                self.text_color = "Black"
+            else:
+                self.text_color = "White"
+            draw = ImageDraw.Draw(self.pic)
+            font = ImageFont.truetype('/home/grimel/Desktop/resources/DroidSerif-Bold.ttf', 30)
+            
+            
+            #----------block for text, which goes within frame
+            if len(self.name.text()) > len(self.surname.text()):
+                dx = font.getsize(self.name.text())[0]
+            else:
+                dx = font.getsize(self.surname.text())[0]
+            print(self.text_x, dx, self.pic.size[0])
+            if self.text_x + dx > self.pic.size[0]:
+                self.text_x = self.text_x - (self.pic.size[0]-self.text_x + dx)
+            #--------------------------------------------------------
+            
+            #draw name
+            draw.text((self.text_x, self.text_y), self.name.text(), self.text_color, font=font)
+            #draw surname
+            draw.text((self.text_x, self.text_y + 30), self.surname.text(), self.text_color, font=font)
+        
         self.putImage()
         
-    def createImage(self):
-            
-        self.pic.save("/home/grimel/Desktop/Some.gif", quality=10)
+    def moveText(self):
         
-    def moveText(self, direction):
-        pass
+        self.text_x += self.default_move[self.sender().text()][0]
+        self.text_y += self.default_move[self.sender().text()][1]
+        self.redraw()
     
-    def changeSize(self):
+    def placeText(self, corner):
         
+        self.text_x, self.text_y = self.default_coord[self.sender().text()]
+        self.redraw()
+        
+    def saveImage(self):
+        
+        self.resizeImage()
+        self.pic.save("/home/grimel/Desktop/Some.png")
+        self.statusBar.showMessage("File created!")
+    
+    def resizeImage(self):
         s = self.combo_versionKindle.currentText()
         pattern = re.compile(r"(\d*).x.(\d*)")
         height = int(re.search(pattern, s).group(1))
         width = int(re.search(pattern, s).group(2))
-        print(width, height)
         self.pic = self.pic.convert("RGB")
         if height > self.pic.size[1]:
             self.pic = self.pic.resize((width, height), Image.BICUBIC)
         else:
             self.pic = self.pic.resize((width, height), Image.ANTIALIAS)
         self.pic = self.pic.convert("RGBA")
-        self.putImage()
-        print(self.pic.size)
-    
-    def changeLabel(self):
-        if self.check_slide.isChecked():
-            coord = self.pic.size[1] - 54
-            self.pic.paste(self.label, (0,coord), mask= self.label)
-            self.statusBar.showMessage("Placed label")
-        else:
-            self.clear_pic.resize(self.pic.size)
-            self.pic = self.clear_pic
-            self.statusBar.showMessage("Removed label")
-        self.putImage()
-        
+            
     def initActions(self):
         
-        self.check_slide.stateChanged.connect(self.changeLabel)
+        self.check_slide.stateChanged.connect(self.redraw)
         self.button_open.clicked.connect(self.openImage)
-        self.combo_versionKindle.currentIndexChanged.connect(self.changeSize)
-        self.button_create.clicked.connect(self.createImage)
+        self.button_create.clicked.connect(self.saveImage)
+        self.name.textChanged.connect(self.redraw)
+        self.surname.textChanged.connect(self.redraw)
+        self.radio_Black.clicked.connect(self.redraw)
+        self.radio_White.clicked.connect(self.redraw)
+        self.radio_leftlower.clicked.connect(self.placeText)
+        self.radio_leftupper.clicked.connect(self.placeText)
+        self.radio_rightlower.clicked.connect(self.placeText)
+        self.radio_rightupper.clicked.connect(self.placeText)
+        self.button_up.pressed.connect(self.moveText)
+        self.button_down.pressed.connect(self.moveText)
+        self.button_left.pressed.connect(self.moveText)
+        self.button_right.pressed.connect(self.moveText)
         
 def main():
     app = QtGui.QApplication(sys.argv)
@@ -350,9 +417,8 @@ def main():
     sys.exit(app.exec_())
     
 def test():
-    s = "Kindle 3 (800 x 600)"
-    pattern = re.compile(r"(\d*).x.(\d*)")
-    print(re.search(pattern, s).group(2))
+    pass
+    
 if __name__ == '__main__':
     main()
     #test()
