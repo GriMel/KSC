@@ -286,9 +286,13 @@ class Window(QtGui.QMainWindow):
         self.button_create.setText("Create")
         self.picture_label.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
         self.button_up.setText("ᐃ")
+        self.button_up.setShortcut("Up")
         self.button_left.setText("ᐊ")
+        self.button_left.setShortcut("Left")
         self.button_right.setText("ᐅ")
+        self.button_right.setShortcut("Right")
         self.button_down.setText("ᐁ")
+        self.button_down.setShortcut("Down")
         self.menuMain.setTitle("Main")
         self.action_Exit.setText("&Exit")
         
