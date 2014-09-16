@@ -2,7 +2,7 @@ from PyQt4 import QtGui, QtCore
 from PIL import Image, ImageDraw, ImageFont, ImageQt
 import sys
 import re
-
+from os import path
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -10,7 +10,8 @@ except AttributeError:
         return s
     
 LABEL = "/home/grimel/Desktop/label.png"
-SAVE_PATH = "/output/"
+#SAVE_PATH = "/output/"
+SAVE_PATH = "/home/grimel/Desktop"
 FONT = "/home/grimel/Desktop/resources/DroidSerif-Bold.ttf"
 
 class Window(QtGui.QMainWindow):
@@ -38,9 +39,9 @@ class Window(QtGui.QMainWindow):
         self.label = Image.open(LABEL).convert("RGBA")
         self.file_path = None
         self.default_coord = {"Left Upper" : (10, 10),
-                              "Left Lower" : (10, 650),
+                              "Left Lower" : (10, 675),
                               "Right Upper" : (500, 10),
-                              "Right Lower" : (500, 650)}
+                              "Right Lower" : (500, 675)}
         self.default_move = {"ᐃ"  : (0, -10),
                                                           "ᐊ" : (-10, 0),
                                                           "ᐅ" : (10, 0),
@@ -326,6 +327,7 @@ class Window(QtGui.QMainWindow):
             self.statusBar.showMessage('Wrong file name')
         
         self.setState(enabled=True)
+        self.surnameState()
         self.redraw()
         
         self.open_path.setText(self.file_path)
@@ -334,7 +336,7 @@ class Window(QtGui.QMainWindow):
     def redraw(self):
         
         self.is_label = self.check_slide.isChecked()
-        self.is_text = bool(self.name.text() or self.surname.text())
+        self.is_text = self.name.text() or self.surname.text()
         self.pic = Image.open(self.file_path)
         self.pic = self.pic.convert("RGBA")
         self.pic = self.pic.resize((600, 800))
@@ -342,28 +344,23 @@ class Window(QtGui.QMainWindow):
             self.pic.paste(self.label, (0, 746), mask= self.label)
         
         if self.is_text:
-            if self.radio_Black.isChecked():
-                self.text_color = "Black"
-            else:
-                self.text_color = "White"
+            size = 30
             draw = ImageDraw.Draw(self.pic)
-            font = ImageFont.truetype('/home/grimel/Desktop/resources/DroidSerif-Bold.ttf', 30)
-            
-            
-            #----------block for text, which goes within frame
-            if len(self.name.text()) > len(self.surname.text()):
-                dx = font.getsize(self.name.text())[0]
+            font = ImageFont.truetype('/home/grimel/Desktop/resources/DroidSerif-Bold.ttf', size)
+            text_color = "White"
+            if self.radio_Black.isChecked():
+                text_color = "Black"
             else:
-                dx = font.getsize(self.surname.text())[0]
-            print(self.text_x, dx, self.pic.size[0])
-            if self.text_x + dx > self.pic.size[0]:
-                self.text_x = self.text_x - (self.pic.size[0]-self.text_x + dx)
-            #--------------------------------------------------------
+                text_color = "White"
+            
+            self.correctText(font=font, size=size)
             
             #draw name
-            draw.text((self.text_x, self.text_y), self.name.text(), self.text_color, font=font)
+            if self.name.text():
+                draw.text((self.text_x, self.text_y), self.name.text(), text_color, font=font)
             #draw surname
-            draw.text((self.text_x, self.text_y + 30), self.surname.text(), self.text_color, font=font)
+            if self.surname.text():
+                draw.text((self.text_x, self.text_y + size), self.surname.text(), text_color, font=font)
         
         self.putImage()
         
@@ -377,6 +374,49 @@ class Window(QtGui.QMainWindow):
         
         self.text_x, self.text_y = self.default_coord[self.sender().text()]
         self.redraw()
+    
+    def correctText(self, font, size):
+        
+        font = font
+        size_x = self.pic.size[0] - 10
+        size_y = self.pic.size[1] - 10 - self.label.size[1]
+        print(size_x)
+        text_height = 0
+        text_lenght = 0
+        name = self.name.text()
+        surname = self.surname.text()
+        
+        if self.text_x < 10:
+            self.text_x = 10
+        if self.text_y < 10:
+            self.text_y = 10
+        
+        if name and surname:
+            text_height = 2*size
+        else:
+            text_height = size
+        print(font.getsize(name))
+        if len(name) >= len(surname):
+            text_lenght = font.getsize(name)[0]
+        else:
+            text_lenght = font.getsize(surname)[0]
+                
+        if self.text_x + text_lenght > size_x:
+            dx = (self.text_x + text_lenght) - size_x
+            self.text_x -= dx
+        if self.text_y + text_height > size_y:
+            dy = (self.text_y + text_height) - size_y
+            self.text_y -= dy
+        '''
+        if len(self.name.text()) > len(self.surname.text()):
+                dx = font.getsize(self.name.text())[0]
+            else:
+                dx = font.getsize(self.surname.text())[0]
+            print(self.text_x, dx, self.pic.size[0])
+            if self.text_x + dx > self.pic.size[0]:
+                self.text_x = self.text_x - (self.pic.size[0]-self.text_x + dx)
+        '''
+        
         
     def saveImage(self):
         
@@ -402,6 +442,7 @@ class Window(QtGui.QMainWindow):
         self.button_open.clicked.connect(self.openImage)
         self.button_create.clicked.connect(self.saveImage)
         self.name.textChanged.connect(self.redraw)
+        self.name.textChanged.connect(self.surnameState)
         self.surname.textChanged.connect(self.redraw)
         self.radio_Black.clicked.connect(self.redraw)
         self.radio_White.clicked.connect(self.redraw)
@@ -413,7 +454,15 @@ class Window(QtGui.QMainWindow):
         self.button_down.pressed.connect(self.moveText)
         self.button_left.pressed.connect(self.moveText)
         self.button_right.pressed.connect(self.moveText)
+    
+    def surnameState(self):
         
+        if self.name.text():
+            self.surname.setEnabled(True)
+        else:
+            self.surname.setEnabled(False)
+            self.surname.setText("")
+
 def main():
     app = QtGui.QApplication(sys.argv)
     w = Window()
