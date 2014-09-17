@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
 from PyQt4 import QtGui, QtCore
 
 from PIL import Image, ImageDraw, ImageFont, ImageQt
@@ -271,7 +274,7 @@ class Window(QtGui.QMainWindow):
         self.button_down.setText("ᐁ")
         self.button_down.setShortcut("Down")
         self.menuMain.setTitle(self.tr("Main"))
-        self.action_Exit.setText(self.tr("&Exit"))
+        self.action_Exit.setText(self.tr("Exit"))
         self.menuLanguage.setTitle(self.tr("Language"))
         self.actionEnglish.setText("English")
         self.actionRussian.setText("Русский")
@@ -328,7 +331,6 @@ class Window(QtGui.QMainWindow):
                 text_color = "White"
             
             self.correctText(font=font, size=size)
-            
             #draw name
             if self.name.text():
                 draw.text((self.text_x, self.text_y), self.name.text(), text_color, font=font)
@@ -413,11 +415,11 @@ class Window(QtGui.QMainWindow):
         self.redraw()
         
         self.open_path.setText(self.file_path)
-        self.statusBar.showMessage("Opened file")
+        self.statusBar.showMessage(self.tr("Opened file"))
           
     def saveImage(self):
         
-        default = "Sample"
+        default = self.tr("Sample")
         name = ""
         self.redraw(glob_redraw=True)
         if self.name.text():
@@ -435,7 +437,7 @@ class Window(QtGui.QMainWindow):
             name+= '-' + str(i)
         name +=".png"
         self.pic.save(path.join(SAVE_PATH, name))
-        self.statusBar.showMessage("File " + name +" created!")
+        self.statusBar.showMessage(self.tr("File {} created!").format(name))
     
     def surnameState(self):
         
@@ -447,6 +449,7 @@ class Window(QtGui.QMainWindow):
             
     def initActions(self):
         
+        self.action_Exit.triggered.connect(self.close)
         self.check_slide.stateChanged.connect(lambda: self.redraw(False))
         self.button_open.clicked.connect(self.openImage)
         self.button_create.clicked.connect(self.saveImage)
