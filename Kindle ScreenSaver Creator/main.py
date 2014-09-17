@@ -3,17 +3,17 @@ from PIL import Image, ImageDraw, ImageFont, ImageQt
 import sys
 import re
 from os import path
+
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     def _fromUtf8(s):
         return s
-    
-LABEL = "/home/grimel/Desktop/label.png"
-#SAVE_PATH = "/output/"
-SAVE_PATH = "/home/grimel/Desktop"
-FONT = "/home/grimel/Desktop/resources/DroidSerif-Regular.ttf"
-ICON = "/home/grimel/Desktop/resources/Kindle.png"
+
+LABEL = "resources/label.png"
+SAVE_PATH = "output/"
+FONT = "resources/CaeciliaLTStd-Bold.otf"
+ICON = "resources/Kindle.png"
 class Window(QtGui.QMainWindow):
     
     def __init__(self):
@@ -32,18 +32,13 @@ class Window(QtGui.QMainWindow):
         self.text_color = None
         self.is_label = True
         self.is_text = False
+        
+        self.font_size = 40
+        self.font = ImageFont.truetype(FONT, self.font_size)
         self.pic = None
         self.clear_pic = None
         self.label = Image.open(LABEL).convert("RGBA")
         self.file_path = None
-        self.default_coord = {"Left Upper" : (10, 10),
-                              "Left Lower" : (10, 675),
-                              "Right Upper" : (500, 10),
-                              "Right Lower" : (500, 675)}
-        self.default_move = {"ᐃ"  : (0, -10),
-                                                          "ᐊ" : (-10, 0),
-                                                          "ᐅ" : (10, 0),
-                                                          "ᐁ": (0, 10)}
 
     def initUI(self):
         self.centralWidget = QtGui.QWidget(self)
@@ -267,6 +262,10 @@ class Window(QtGui.QMainWindow):
 
     def retranslateUi(self):
         self.setWindowTitle("MainWindow")
+        
+        #for ico files 
+        #im = QtGui.QImageReader(ICON).read()
+        #self.setWindowIcon(QtGui.QIcon(QtGui.QPixmap.fromImage(ICON))
         self.setWindowIcon(QtGui.QIcon(ICON))
         self.button_open.setText("Open...")
         self.label_name.setText("Name")
@@ -301,7 +300,7 @@ class Window(QtGui.QMainWindow):
     def setState(self, enabled):
                       
         self.name.setEnabled(enabled)
-        self.surname.setEnabled(enabled)
+        self.surname.setEnabled(False)
         self.radio_leftlower.setEnabled(enabled)
         self.radio_leftupper.setEnabled(enabled)
         self.radio_rightlower.setEnabled(enabled)
@@ -328,7 +327,6 @@ class Window(QtGui.QMainWindow):
             self.statusBar.showMessage('Wrong file name')
         
         self.setState(enabled=True)
-        self.surnameState()
         self.redraw()
         
         self.open_path.setText(self.file_path)
@@ -340,19 +338,19 @@ class Window(QtGui.QMainWindow):
         self.is_text = self.name.text() or self.surname.text()
         self.pic = Image.open(self.file_path)
         self.pic = self.pic.convert("RGBA")
-        if glob_redraw:
-            self.resizeImage()
-        else:
-            if self.pic.size != (600, 800):
-                self.pic = self.pic.resize((600, 800))
         
+        if self.pic.size != (600, 800):
+            self.pic = self.pic.resize((600, 800))
         if self.is_label:
             self.pic.paste(self.label, (0, self.pic.size[1] - self.label.size[1]), mask= self.label)
         
+        if glob_redraw:
+            self.resizeImage()
+        
         if self.is_text:
-            size = 40
+            size = self.font_size
             draw = ImageDraw.Draw(self.pic)
-            font = ImageFont.truetype(FONT, size)
+            font = self.font
             text_color = "White"
             if self.radio_Black.isChecked():
                 text_color = "Black"
@@ -368,17 +366,25 @@ class Window(QtGui.QMainWindow):
             if self.surname.text():
                 draw.text((self.text_x, self.text_y + size), self.surname.text(), text_color, font=font)
         
-        self.putImage()
+        if not glob_redraw:
+            self.putImage()
         
     def moveText(self):
-        
-        self.text_x += self.default_move[self.sender().text()][0]
-        self.text_y += self.default_move[self.sender().text()][1]
+        default_move = {"ᐃ"  : (0, -10),
+                                                "ᐊ" : (-10, 0),
+                                                "ᐅ" : (10, 0),
+                                                "ᐁ": (0, 10)}
+        self.text_x += default_move[self.sender().text()][0]
+        self.text_y += default_move[self.sender().text()][1]
         self.redraw()
     
     def placeText(self, corner):
+        default_coord = {"Left Upper" : (10, 10),
+                          "Left Lower" : (10, self.pic.size[1]),
+                          "Right Upper" : (self.pic.size[0], 10),
+                          "Right Lower" : (self.pic.size[0], self.pic.size[1])}
         
-        self.text_x, self.text_y = self.default_coord[self.sender().text()]
+        self.text_x, self.text_y = default_coord[self.sender().text()]
         self.redraw()
     
     def correctText(self, font, size):
@@ -411,17 +417,7 @@ class Window(QtGui.QMainWindow):
             self.text_x -= dx
         if self.text_y + text_height > size_y:
             dy = (self.text_y + text_height) - size_y
-            self.text_y -= dy
-        '''
-        if len(self.name.text()) > len(self.surname.text()):
-                dx = font.getsize(self.name.text())[0]
-            else:
-                dx = font.getsize(self.surname.text())[0]
-            print(self.text_x, dx, self.pic.size[0])
-            if self.text_x + dx > self.pic.size[0]:
-                self.text_x = self.text_x - (self.pic.size[0]-self.text_x + dx)
-        '''
-        
+            self.text_y -= dy        
         
     def saveImage(self):
         
@@ -452,21 +448,24 @@ class Window(QtGui.QMainWindow):
         width = int(re.search(pattern, s).group(2))
         self.pic = self.pic.convert("RGB")
         #upscaling
-        self.pic = self.pic.resize((width, height), Image.BICUBIC)
-        #downscaling
-        #self.pic = self.pic.resize((width, height), Image.ANTIALIAS)
+        
+        if self.pic.size != (width, height):
+            if self.pic.size > (width, height):
+                self.pic = self.pic.resize((width, height), Image.ANTIALIAS) #downscaling
+            else:
+                self.pic = self.pic.resize((width, height), Image.BICUBIC)   #upscaling
         self.pic = self.pic.convert("RGBA")
             
     def initActions(self):
         
-        self.check_slide.stateChanged.connect(self.redraw)
+        self.check_slide.stateChanged.connect(lambda: self.redraw(False))
         self.button_open.clicked.connect(self.openImage)
         self.button_create.clicked.connect(self.saveImage)
-        self.name.textChanged.connect(self.redraw)
+        self.name.textChanged.connect(lambda: self.redraw(False))
         self.name.textChanged.connect(self.surnameState)
-        self.surname.textChanged.connect(self.redraw)
-        self.radio_Black.clicked.connect(self.redraw)
-        self.radio_White.clicked.connect(self.redraw)
+        self.surname.textChanged.connect(lambda: self.redraw(False))
+        self.radio_Black.clicked.connect(lambda: self.redraw(False))
+        self.radio_White.clicked.connect(lambda: self.redraw(False))
         self.radio_leftlower.clicked.connect(self.placeText)
         self.radio_leftupper.clicked.connect(self.placeText)
         self.radio_rightlower.clicked.connect(self.placeText)
@@ -491,8 +490,10 @@ def main():
     sys.exit(app.exec_())
     
 def test():
-    pass
+    s = (400, 1200)
+    r = (800, 600)
+    print(r>s)
     
 if __name__ == '__main__':
-    main()
-    #test()
+    #main()
+    test()
