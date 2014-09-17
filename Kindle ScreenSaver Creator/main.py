@@ -1,4 +1,5 @@
 from PyQt4 import QtGui, QtCore
+
 from PIL import Image, ImageDraw, ImageFont, ImageQt
 import sys
 import re
@@ -27,6 +28,7 @@ class Window(QtGui.QMainWindow):
         
     def initVariables(self):
         
+        self.language_translator = QtCore.QTranslator()
         self.text_x = 10
         self.text_y = 10
         self.text_color = None
@@ -159,9 +161,9 @@ class Window(QtGui.QMainWindow):
         self.version_HorLayout.addWidget(self.label_versionKindle)
         self.combo_versionKindle = QtGui.QComboBox(self.centralWidget)
         self.combo_versionKindle.setMinimumSize(QtCore.QSize(0, 20))
-        self.combo_versionKindle.addItem(_fromUtf8(""))
-        self.combo_versionKindle.addItem(_fromUtf8(""))
-        self.combo_versionKindle.addItem(_fromUtf8(""))
+        self.combo_versionKindle.addItem("")
+        self.combo_versionKindle.addItem("")
+        self.combo_versionKindle.addItem("")
         self.version_HorLayout.addWidget(self.combo_versionKindle)
         self.LeftVertLayout.addLayout(self.version_HorLayout)
         #------------------------------------------
@@ -222,36 +224,44 @@ class Window(QtGui.QMainWindow):
         self.setStatusBar(self.statusBar)
         self.action_Exit = QtGui.QAction(self)
         self.menuMain.addAction(self.action_Exit)
+        self.menuLanguage = QtGui.QMenu(self.menuMain)
+        self.actionRussian = QtGui.QAction(self)
+        self.actionEnglish = QtGui.QAction(self)
+        self.actionUkrainian = QtGui.QAction(self)
+        self.menuLanguage.addAction(self.actionEnglish)
+        self.menuLanguage.addAction(self.actionRussian)
+        self.menuLanguage.addAction(self.actionUkrainian)
+        self.menuMain.addAction(self.menuLanguage.menuAction())
         self.menuBar.addAction(self.menuMain.menuAction())
 
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def retranslateUi(self):
-        self.setWindowTitle("MainWindow")
+        self.setWindowTitle("Kindle ScreenSaver Creator")
         
         #for ico files 
         #im = QtGui.QImageReader(ICON).read()
         #self.setWindowIcon(QtGui.QIcon(QtGui.QPixmap.fromImage(ICON))
         self.setWindowIcon(QtGui.QIcon(ICON))
-        self.button_open.setText("Open...")
-        self.label_name.setText("Name")
-        self.label_surname.setText("Surname")
-        self.radio_White.setText("White")
-        self.radio_Black.setText("Black")
-        self.label_textcolor.setText("<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Text color</span></p></body></html>")
-        self.label_wherePlace.setText("<html><head/><body><p align=\"center\"><span style=\" font-size:10pt; font-weight:600;\">Where to place text</span></p></body></html>")
-        self.radio_leftupper.setText("Left Upper")
-        self.radio_rightlower.setText("Right Lower")
-        self.radio_leftlower.setText("Left Lower")
-        self.radio_rightupper.setText("Right Upper")
-        self.label_versionKindle.setText("Version of Kindle")
+        self.button_open.setText(self.tr("Open..."))
+        self.label_name.setText(self.tr("Name"))
+        self.label_surname.setText(self.tr("Surname"))
+        self.radio_White.setText(self.tr("White"))
+        self.radio_Black.setText(self.tr("Black"))
+        self.label_textcolor.setText(self.tr("<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Text color</span></p></body></html>"))
+        self.label_wherePlace.setText(self.tr("<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Where to place text</span></p></body></html>"))
+        self.radio_leftupper.setText(self.tr("Left Upper"))
+        self.radio_rightlower.setText(self.tr("Right Lower"))
+        self.radio_leftlower.setText(self.tr("Left Lower"))
+        self.radio_rightupper.setText(self.tr("Right Upper"))
+        self.label_versionKindle.setText(self.tr("Version of Kindle"))
         self.combo_versionKindle.setItemText(0, "Kindle 3, 4, 5, Touch (800 x 600)")
         self.combo_versionKindle.setItemText(1, "Kindle DX (1200 x 824)")
         self.combo_versionKindle.setItemText(2, "Kindle Paperwhite (1024 x 768)")
         
         self.check_slide.setText("Slide and release the power to wake")
-        self.button_create.setText("Create")
-        self.picture_label.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
+        self.button_create.setText(self.tr("Create"))
+        #self.picture_label.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
         self.button_up.setText("ᐃ")
         self.button_up.setShortcut("Up")
         self.button_left.setText("ᐊ")
@@ -260,8 +270,12 @@ class Window(QtGui.QMainWindow):
         self.button_right.setShortcut("Right")
         self.button_down.setText("ᐁ")
         self.button_down.setShortcut("Down")
-        self.menuMain.setTitle("Main")
-        self.action_Exit.setText("&Exit")
+        self.menuMain.setTitle(self.tr("Main"))
+        self.action_Exit.setText(self.tr("&Exit"))
+        self.menuLanguage.setTitle(self.tr("Language"))
+        self.actionEnglish.setText("English")
+        self.actionRussian.setText("Русский")
+        self.actionUkrainian.setText("Українська")
         
     def setState(self, enabled):
                       
@@ -381,7 +395,6 @@ class Window(QtGui.QMainWindow):
         height = int(re.search(pattern, s).group(1))
         width = int(re.search(pattern, s).group(2))
         self.pic = self.pic.convert("RGB")
-        #upscaling
         
         if self.pic.size != (width, height):
             if self.pic.size > (width, height):
@@ -450,7 +463,22 @@ class Window(QtGui.QMainWindow):
         self.button_down.pressed.connect(self.moveText)
         self.button_left.pressed.connect(self.moveText)
         self.button_right.pressed.connect(self.moveText)
-
+        self.actionRussian.triggered.connect(self.translate_ru)
+        self.actionEnglish.triggered.connect(self.translate_en)
+    
+    def translate_ru(self):
+        app = QtGui.QApplication.instance()
+        path = "ru.qm"
+        print(self.language_translator.load(path))
+        app.installTranslator(self.language_translator)
+        self.retranslateUi()
+    
+    def translate_en(self):
+        app = QtGui.QApplication.instance()
+        self.language_translator = QtCore.QTranslator()
+        app.installTranslator(self.language_translator)
+        self.retranslateUi()
+        
 def main():
     app = QtGui.QApplication(sys.argv)
     w = Window()
