@@ -2,8 +2,8 @@
 # -*- coding: UTF-8 -*-
 
 from PyQt4 import QtGui, QtCore
-
 from PIL import Image, ImageDraw, ImageFont, ImageQt
+from math import floor
 import sys
 import re
 from os import path
@@ -16,8 +16,117 @@ except AttributeError:
 
 LABEL = "resources/label.png"
 SAVE_PATH = "output/"
-FONT = "resources/CaeciliaLTStd-Bold.otf"
+#FONT = "resources/CaeciliaLTStd-Bold.otf"
+FONT = "resources/Caecilia Regular.ttf"
 ICON = "resources/Kindle.png"
+class CropDialog(QtGui.QDialog):
+    
+    def __init__(self, im):
+        super(CropDialog, self).__init__()
+        self.initUI()
+        self.im = Image.open(im)
+        self.putImage()
+        self.initVariables()
+    
+    def initVariables(self):
+        
+        self.delta = None
+        
+    def initUI(self):
+        
+        self.resize(550, 500)
+        self.MainLayout = QtGui.QVBoxLayout(self)
+        self.ButtonHorLayout = QtGui.QHBoxLayout()
+        self.label_version = QtGui.QLabel(self)
+        self.label_version.setMinimumSize(QtCore.QSize(0, 20))
+        self.label_version.setMaximumSize(QtCore.QSize(16777215, 20))
+        self.label_version.setObjectName(_fromUtf8("label_version"))
+        self.ButtonHorLayout.addWidget(self.label_version)
+        
+        self.combo_versionKindle = QtGui.QComboBox(self)
+        self.combo_versionKindle.setMinimumSize(QtCore.QSize(0, 20))
+        self.combo_versionKindle.setObjectName("combo_versionKindle")
+        self.combo_versionKindle.addItem("")
+        self.combo_versionKindle.addItem("")
+        self.combo_versionKindle.addItem("")
+        self.ButtonHorLayout.addWidget(self.combo_versionKindle)
+        
+        self.push_crop = QtGui.QPushButton(self)
+        self.push_crop.setMinimumSize(QtCore.QSize(0, 20))
+        self.push_crop.setObjectName("push_crop")
+        self.ButtonHorLayout.addWidget(self.push_crop)
+        self.MainLayout.addLayout(self.ButtonHorLayout)
+        self.ImHorLayout = QtGui.QHBoxLayout()
+        self.ImHorLayout.setObjectName(_fromUtf8("ImHorLayout"))
+        self.push_left = QtGui.QPushButton(self)
+        self.push_left.setMinimumSize(QtCore.QSize(50, 400))
+        self.push_left.setMaximumSize(QtCore.QSize(50, 400))
+        self.push_left.setObjectName("push_left")
+        self.ImHorLayout.addWidget(self.push_left)
+        self.label_image = QtGui.QLabel(self)
+        self.label_image.setMinimumSize(QtCore.QSize(300, 400))
+        self.label_image.setMaximumSize(QtCore.QSize(300, 400))
+        self.label_image.setStyleSheet(_fromUtf8("border-width: 1px;\n"
+                                                 "border-style: solid"))
+        self.label_image.setObjectName("label_image")
+        self.ImHorLayout.addWidget(self.label_image)
+        self.push_right = QtGui.QPushButton(self)
+        self.push_right.setMinimumSize(QtCore.QSize(50, 400))
+        self.push_right.setMaximumSize(QtCore.QSize(50, 400))
+        self.push_right.setObjectName("push_right")
+        self.ImHorLayout.addWidget(self.push_right)
+        self.MainLayout.addLayout(self.ImHorLayout)
+
+        self.retranslateUi(self)
+        QtCore.QMetaObject.connectSlotsByName(self)
+
+    def retranslateUi(self, CropDialog):
+        CropDialog.setWindowTitle("Crop Image")
+        self.label_version.setText("Choose version of Kindle")
+        self.combo_versionKindle.setItemText(0, "Kindle 3, 4, 5, Touch (800 x 600)")
+        self.combo_versionKindle.setItemText(1, "Kindle DX (1024 x 842)")
+        self.combo_versionKindle.setItemText(2, "Kindle PaperWhite (1200 x 824)")
+        self.push_crop.setText("Crop")
+        self.push_left.setText("<")
+        self.label_image.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
+        self.push_right.setText(">")
+        
+    def putImage(self):
+        
+        self.resizeImage()
+        height = self.im.size[1]/2
+        width = self.im.size[0]/2
+        self.label_image.setFixedHeight(height)
+        self.label_image.setFixedWidth(width)
+        self.push_left.setFixedHeight(height)
+        self.push_right.setFixedHeight(height)
+
+        pixmap = QtGui.QPixmap.fromImage(ImageQt.ImageQt(self.im))
+        pixmap = pixmap.scaled(self.label_image.size())
+        self.label_image.setPixmap(pixmap)
+    
+    def resizeImage(self):
+        s = self.combo_versionKindle.currentText()
+        pattern = re.compile(r"(\d*).x.(\d*)")
+        height = int(re.search(pattern, s).group(1))
+        width = int(re.search(pattern, s).group(2))
+        self.im = self.im.convert("RGB")
+        
+        new_height = height
+        ratio = new_height/self.im.size[1]
+        print(ratio)
+        new_width = floor(ratio*self.im.size[0])
+        
+        if self.im.size != (width, height):
+            if self.im.size > (width, height):
+                #self.im = self.im.resize((width, height), Image.ANTIALIAS) #downscaling
+                self.im = self.im.resize((new_width, new_height), Image.ANTIALIAS)
+            else:
+                #self.im = self.im.resize((width, height), Image.BICUBIC)   #upscaling
+                self.im = self.im.resize((new_width, new_height), Image.BICUBIC)
+        self.im = self.im.convert("RGBA")
+        print(self.im.size)
+
 class Window(QtGui.QMainWindow):
     
     def __init__(self):
@@ -40,7 +149,7 @@ class Window(QtGui.QMainWindow):
         
         self.font_size = 40
         self.font = ImageFont.truetype(FONT, self.font_size)
-        self.pic = None
+        self.im = None
         self.clear_pic = None
         self.label = Image.open(LABEL).convert("RGBA")
         self.file_path = None
@@ -127,28 +236,35 @@ class Window(QtGui.QMainWindow):
         self.placetext_Grid.addWidget(self.label_wherePlace, 2, 0, 1, 1)
         
         self.grid_radio_placetext = QtGui.QGridLayout()
+        
         self.radio_leftupper = QtGui.QRadioButton(self.centralWidget)
         self.radio_leftupper.setMinimumSize(QtCore.QSize(0, 20))
         self.radio_leftupper.setChecked(True)
-        
+        self.radio_leftupper.setObjectName("left_upper")
         self.buttonGroup_PlaceText = QtGui.QButtonGroup(self)
         self.buttonGroup_PlaceText.addButton(self.radio_leftupper)
         self.grid_radio_placetext.addWidget(self.radio_leftupper, 0, 0, 1, 1)
         
-        self.radio_rightlower = QtGui.QRadioButton(self.centralWidget)
-        self.radio_rightlower.setMinimumSize(QtCore.QSize(0, 20))
-        self.radio_rightlower.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.buttonGroup_PlaceText.addButton(self.radio_rightlower)
-        self.grid_radio_placetext.addWidget(self.radio_rightlower, 1, 1, 1, 1)
         self.radio_leftlower = QtGui.QRadioButton(self.centralWidget)
         self.radio_leftlower.setMinimumSize(QtCore.QSize(0, 20))
+        self.radio_leftlower.setObjectName("left_lower")
         self.buttonGroup_PlaceText.addButton(self.radio_leftlower)
-        self.grid_radio_placetext.addWidget(self.radio_leftlower, 1, 0, 1, 1)
+        self.grid_radio_placetext.addWidget(self.radio_leftlower, 1, 0, 1, 1)   
+        
         self.radio_rightupper = QtGui.QRadioButton(self.centralWidget)
         self.radio_rightupper.setMinimumSize(QtCore.QSize(0, 20))
         self.radio_rightupper.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.radio_rightupper.setObjectName("right_upper")
         self.buttonGroup_PlaceText.addButton(self.radio_rightupper)
         self.grid_radio_placetext.addWidget(self.radio_rightupper, 0, 1, 1, 1)
+        
+        self.radio_rightlower = QtGui.QRadioButton(self.centralWidget)
+        self.radio_rightlower.setMinimumSize(QtCore.QSize(0, 20))
+        self.radio_rightlower.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.radio_rightlower.setObjectName("right_lower")
+        self.buttonGroup_PlaceText.addButton(self.radio_rightlower)
+        self.grid_radio_placetext.addWidget(self.radio_rightlower, 1, 1, 1, 1)
+        
         self.placetext_Grid.addLayout(self.grid_radio_placetext, 3, 0, 1, 1)
         self.LeftVertLayout.addLayout(self.placetext_Grid)
         #------------------------------------------
@@ -190,13 +306,13 @@ class Window(QtGui.QMainWindow):
         self.MainLayout.addLayout(self.LeftVertLayout)
         self.RightVertLayout = QtGui.QVBoxLayout()
         
-        self.picture_label = QtGui.QLabel(self.centralWidget)
-        self.picture_label.setMinimumSize(QtCore.QSize(300, 400))
-        self.picture_label.setMaximumSize(QtCore.QSize(300, 400))
-        self.picture_label.setStyleSheet(_fromUtf8("border-style: solid;\n"
+        self.label_image = QtGui.QLabel(self.centralWidget)
+        self.label_image.setMinimumSize(QtCore.QSize(300, 400))
+        self.label_image.setMaximumSize(QtCore.QSize(300, 400))
+        self.label_image.setStyleSheet(_fromUtf8("border-style: solid;\n"
                                                    "border-width: 1px;\n"
                                                    "border-color: white;"))
-        self.RightVertLayout.addWidget(self.picture_label)
+        self.RightVertLayout.addWidget(self.label_image)
         #------------------------------------------
         self.grid_arrows = QtGui.QGridLayout()
         self.button_up = QtGui.QPushButton(self.centralWidget)
@@ -264,7 +380,7 @@ class Window(QtGui.QMainWindow):
         
         self.check_slide.setText("Slide and release the power to wake")
         self.button_create.setText(self.tr("Create"))
-        #self.picture_label.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
+        #self.label_image.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
         self.button_up.setText("ᐃ")
         self.button_up.setShortcut("Up")
         self.button_left.setText("ᐊ")
@@ -283,7 +399,7 @@ class Window(QtGui.QMainWindow):
     def setState(self, enabled):
                       
         self.name.setEnabled(enabled)
-        self.surname.setEnabled(False)
+        self.surname.setEnabled(enabled)
         self.radio_leftlower.setEnabled(enabled)
         self.radio_leftupper.setEnabled(enabled)
         self.radio_rightlower.setEnabled(enabled)
@@ -299,9 +415,9 @@ class Window(QtGui.QMainWindow):
 
     def putImage(self):
         
-        pixmap = QtGui.QPixmap.fromImage(ImageQt.ImageQt(self.pic))
-        pixmap = pixmap.scaled(self.picture_label.size())
-        self.picture_label.setPixmap(pixmap)
+        pixmap = QtGui.QPixmap.fromImage(ImageQt.ImageQt(self.im))
+        pixmap = pixmap.scaled(self.label_image.size())
+        self.label_image.setPixmap(pixmap)
     
     
     
@@ -309,20 +425,20 @@ class Window(QtGui.QMainWindow):
         
         self.is_label = self.check_slide.isChecked()
         self.is_text = self.name.text() or self.surname.text()
-        self.pic = Image.open(self.file_path)
-        self.pic = self.pic.convert("RGBA")
+        self.im = Image.open(self.file_path)
+        self.im = self.im.convert("RGBA")
         
-        if self.pic.size != (600, 800):
-            self.pic = self.pic.resize((600, 800))
+        if self.im.size != (600, 800):
+            self.im = self.im.resize((600, 800))
         if self.is_label:
-            self.pic.paste(self.label, (0, self.pic.size[1] - self.label.size[1]), mask= self.label)
+            self.im.paste(self.label, (0, self.im.size[1] - self.label.size[1]), mask= self.label)
         
         if glob_redraw:
             self.resizeImage()
         
         if self.is_text:
             size = self.font_size
-            draw = ImageDraw.Draw(self.pic)
+            draw = ImageDraw.Draw(self.im)
             font = self.font
             text_color = "White"
             if self.radio_Black.isChecked():
@@ -340,7 +456,7 @@ class Window(QtGui.QMainWindow):
         
         if not glob_redraw:
             self.putImage()
-        
+
     def moveText(self):
         default_move = {"ᐃ"  : (0, -10),
                                                 "ᐊ" : (-10, 0),
@@ -351,19 +467,19 @@ class Window(QtGui.QMainWindow):
         self.redraw()
     
     def placeText(self, corner):
-        default_coord = {"Left Upper" : (10, 10),
-                          "Left Lower" : (10, self.pic.size[1]),
-                          "Right Upper" : (self.pic.size[0], 10),
-                          "Right Lower" : (self.pic.size[0], self.pic.size[1])}
+        default_coord = {"left_upper" : (10, 10),
+                          "left_lower" : (10, self.im.size[1]),
+                          "right_upper" : (self.im.size[0], 10),
+                          "right_lower" : (self.im.size[0], self.im.size[1])}
         
-        self.text_x, self.text_y = default_coord[self.sender().text()]
+        self.text_x, self.text_y = default_coord[self.sender().objectName()]
         self.redraw()
     
     def correctText(self, font, size):
         
         font = font
-        size_x = self.pic.size[0] - 10
-        size_y = self.pic.size[1] - 10 - self.label.size[1]
+        size_x = self.im.size[0] - 10
+        size_y = self.im.size[1] - 10 - self.label.size[1]
         text_height = 0
         text_lenght = 0
         name = self.name.text()
@@ -396,22 +512,40 @@ class Window(QtGui.QMainWindow):
         pattern = re.compile(r"(\d*).x.(\d*)")
         height = int(re.search(pattern, s).group(1))
         width = int(re.search(pattern, s).group(2))
-        self.pic = self.pic.convert("RGB")
+        self.im = self.im.convert("RGB")
         
-        if self.pic.size != (width, height):
-            if self.pic.size > (width, height):
-                self.pic = self.pic.resize((width, height), Image.ANTIALIAS) #downscaling
+        if self.im.size != (width, height):
+            if self.im.size > (width, height):
+                self.im = self.im.resize((width, height), Image.ANTIALIAS) #downscaling
             else:
-                self.pic = self.pic.resize((width, height), Image.BICUBIC)   #upscaling
-        self.pic = self.pic.convert("RGBA")
+                self.im = self.im.resize((width, height), Image.BICUBIC)   #upscaling
+        self.im = self.im.convert("RGBA")
     
     def openImage(self):
         try:
             self.file_path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
         except:
             self.statusBar.showMessage('Wrong file name')
+        #place for dialog crop
+        ui = CropDialog(self.file_path)      
+        ui.exec_()
         
-        self.setState(enabled=True)
+        
+        
+        #end of place for dialog crop
+        if not self.name.isEnabled():
+            self.name.setEnabled(True)
+        if not self.check_slide.isEnabled():
+            self.check_slide.setEnabled(True)
+        if not self.combo_versionKindle.isEnabled():
+            self.combo_versionKindle.setEnabled(True)
+        if not self.radio_leftupper.isChecked():
+            self.radio_leftupper.setChecked(True)
+        if self.name.text():
+            self.name.setText("")
+        if self.surname.text():
+            self.surname.setText("")
+        self.surnameState()
         self.redraw()
         
         self.open_path.setText(self.file_path)
@@ -428,7 +562,7 @@ class Window(QtGui.QMainWindow):
             name+= ' ' + self.surname.text()
         if not name:
             name = default
-        name += ' ' + str(self.pic.size[1]) + 'x' + str(self.pic.size[0])
+        name += ' ' + str(self.im.size[1]) + 'x' + str(self.im.size[0])
               
         if path.isfile(path.join(SAVE_PATH, name + ".png")):
             i = 2
@@ -436,15 +570,24 @@ class Window(QtGui.QMainWindow):
                 i+=1
             name+= '-' + str(i)
         name +=".png"
-        self.pic.save(path.join(SAVE_PATH, name))
+        self.im.save(path.join(SAVE_PATH, name))
         self.statusBar.showMessage(self.tr("File {} created!").format(name))
     
     def surnameState(self):
         
-        if self.name.text():
-            self.surname.setEnabled(True)
-        else:
-            self.surname.setEnabled(False)
+        enabled = bool(self.name.text())
+        self.surname.setEnabled(enabled)
+        self.radio_leftlower.setEnabled(enabled)
+        self.radio_leftupper.setEnabled(enabled)
+        self.radio_rightlower.setEnabled(enabled)
+        self.radio_rightupper.setEnabled(enabled)
+        self.radio_Black.setEnabled(enabled)
+        self.radio_White.setEnabled(enabled)
+        self.button_left.setEnabled(enabled)
+        self.button_right.setEnabled(enabled)
+        self.button_up.setEnabled(enabled)
+        self.button_down.setEnabled(enabled)
+        if not enabled:
             self.surname.setText("")
             
     def initActions(self):
@@ -481,6 +624,7 @@ class Window(QtGui.QMainWindow):
         self.language_translator = QtCore.QTranslator()
         app.installTranslator(self.language_translator)
         self.retranslateUi()
+    
         
 def main():
     app = QtGui.QApplication(sys.argv)
@@ -489,10 +633,7 @@ def main():
     sys.exit(app.exec_())
     
 def test():
-    s = (400, 1200)
-    r = (800, 600)
-    print(r>s)
-    
+    print("Абірвалг")
 if __name__ == '__main__':
     main()
     #test()
