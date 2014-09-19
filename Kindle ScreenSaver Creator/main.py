@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-
+#
+#--------------------LICENSE STUFF
+#
 from PyQt4 import QtGui, QtCore
 from PIL import Image, ImageDraw, ImageFont, ImageQt
 from math import floor, ceil
@@ -145,6 +147,7 @@ class CropDialog(QtGui.QDialog):
                 #self.im = self.im.resize((width, height), Image.BICUBIC)   #upscaling
                 self.im = self.im.resize((new_width, new_height), Image.BICUBIC)
         self.im = self.im.convert("RGBA")
+        self.checkActive()
     
     def blackImage(self, default=True):
         
@@ -186,18 +189,37 @@ class CropDialog(QtGui.QDialog):
         
     def redrawImage(self, default=True):
         self.openImage()
+        self.setgrayscaleImage()
         self.resizeImage()
         self.blackImage(default)
         self.putImage()
         self.checkActive()
+    
+    def setgrayscaleImage(self):
         
+        width,height = self.im.size
+        for i in range(width):
+            for j in range(height):
+                print("Still here")
+                r,g,b = self.im.getpixel((i,j))
+                if r!= g != b: self.im = self.im.convert("LA"); self.im = self.im.convert("RGBA"); return
+    
+    def closeEvent(self, event):
+        print(self.sender().objectName())
+        if 'ok' in self.sender().objectName():
+            print("OK clicked")
+            return
+        else:
+            print("X clicked")
+            self.im = None
+    
     def checkActive(self):
         
-        if self.im.size[0] <= self.width_need:
-            self.push_crop.setEnabled(False)
-            self.push_ok.setEnabled(True)
-            self.push_left.setEnabled(False)
-            self.push_right.setEnabled(False)
+        state = self.im.size[0] <= self.width_need
+        self.push_crop.setEnabled(not state)
+        self.push_ok.setEnabled(state)
+        self.push_left.setEnabled(not state)
+        self.push_right.setEnabled(not state)
     
     def initActions(self):
         
@@ -205,6 +227,7 @@ class CropDialog(QtGui.QDialog):
         self.push_right.clicked.connect(self.changeBlack)
         self.push_crop.clicked.connect(self.cropImage)
         self.combo_versionKindle.currentIndexChanged.connect(self.redrawImage)
+        self.push_ok.clicked.connect(self.close)
     
 class Window(QtGui.QMainWindow):
     
@@ -227,7 +250,7 @@ class Window(QtGui.QMainWindow):
         self.is_text = False
         
         self.im = None
-        self.clear_pic = None
+        self.clear_im = None
         self.label = Image.open(LABEL).convert("RGBA")
         self.file_path = None
 
@@ -350,27 +373,9 @@ class Window(QtGui.QMainWindow):
         self.line_4.setFrameShadow(QtGui.QFrame.Sunken)
         self.LeftVertLayout.addWidget(self.line_4)
         #------------------------------------------
-        self.version_HorLayout = QtGui.QHBoxLayout()
-        self.label_versionKindle = QtGui.QLabel(self.centralWidget)
-        self.label_versionKindle.setMinimumSize(QtCore.QSize(0, 20))
-        self.label_versionKindle.setMaximumSize(QtCore.QSize(16777215, 20))
-        self.version_HorLayout.addWidget(self.label_versionKindle)
-        self.combo_versionKindle = QtGui.QComboBox(self.centralWidget)
-        self.combo_versionKindle.setMinimumSize(QtCore.QSize(0, 20))
-        self.combo_versionKindle.addItem("")
-        self.combo_versionKindle.addItem("")
-        self.combo_versionKindle.addItem("")
-        self.version_HorLayout.addWidget(self.combo_versionKindle)
-        self.LeftVertLayout.addLayout(self.version_HorLayout)
-        #------------------------------------------
-        self.line_5 = QtGui.QFrame(self.centralWidget)
-        self.line_5.setFrameShape(QtGui.QFrame.HLine)
-        self.line_5.setFrameShadow(QtGui.QFrame.Sunken)
-        self.LeftVertLayout.addWidget(self.line_5)
-        #------------------------------------------
         self.slide_HorLayout = QtGui.QHBoxLayout()
         self.check_slide = QtGui.QCheckBox(self.centralWidget)
-        self.check_slide.setChecked(True)
+        
         self.slide_HorLayout.addWidget(self.check_slide)
         spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.slide_HorLayout.addItem(spacerItem3)
@@ -449,10 +454,6 @@ class Window(QtGui.QMainWindow):
         self.radio_rightlower.setText(self.tr("Right Lower"))
         self.radio_leftlower.setText(self.tr("Left Lower"))
         self.radio_rightupper.setText(self.tr("Right Upper"))
-        self.label_versionKindle.setText(self.tr("Version of Kindle"))
-        self.combo_versionKindle.setItemText(0, "Kindle 3, 4, 5, Touch (800 x 600)")
-        self.combo_versionKindle.setItemText(1, "Kindle DX (1200 x 824)")
-        self.combo_versionKindle.setItemText(2, "Kindle Paperwhite (1024 x 768)")
         
         self.check_slide.setText("Slide and release the power to wake")
         self.button_create.setText(self.tr("Create"))
@@ -482,7 +483,6 @@ class Window(QtGui.QMainWindow):
         self.radio_rightupper.setEnabled(enabled)
         self.radio_Black.setEnabled(enabled)
         self.radio_White.setEnabled(enabled)
-        self.combo_versionKindle.setEnabled(enabled)
         self.check_slide.setEnabled(enabled)
         self.button_left.setEnabled(enabled)
         self.button_right.setEnabled(enabled)
@@ -501,21 +501,16 @@ class Window(QtGui.QMainWindow):
         
         self.is_label = self.check_slide.isChecked()
         self.is_text = self.name.text() or self.surname.text()
-        self.im = Image.open(self.file_path)
-        self.im = self.im.convert("RGBA")
+        self.pasteImage()
         
-        if self.im.size != (600, 800):
-            self.im = self.im.resize((600, 800))
+        
         if self.is_label:
             self.im.paste(self.label, (0, self.im.size[1] - self.label.size[1]), mask= self.label)
-        
-        if glob_redraw:
-            self.resizeImage()
         
         if self.is_text:
             size = FONT_SIZE
             draw = ImageDraw.Draw(self.im)
-            font = ImageFont.truetype(FONT, self.font_size)
+            font = ImageFont.truetype(FONT, FONT_SIZE)
             text_color = "White"
             if self.radio_Black.isChecked():
                 text_color = "Black"
@@ -529,9 +524,8 @@ class Window(QtGui.QMainWindow):
             #draw surname
             if self.surname.text():
                 draw.text((self.text_x, self.text_y + size), self.surname.text(), text_color, font=font)
-        
-        if not glob_redraw:
-            self.putImage()
+
+        self.putImage()
 
     def moveText(self):
         default_move = {"ᐃ"  : (0, -10),
@@ -582,54 +576,57 @@ class Window(QtGui.QMainWindow):
         if self.text_y + text_height > size_y:
             dy = (self.text_y + text_height) - size_y
             self.text_y -= dy        
-    
-    def resizeImage(self):
-        s = self.combo_versionKindle.currentText()
-        pattern = re.compile(r"(\d*).x.(\d*)")
-        height = int(re.search(pattern, s).group(1))
-        width = int(re.search(pattern, s).group(2))
-        self.im = self.im.convert("RGB")
         
-        if self.im.size != (width, height):
-            if self.im.size > (width, height):
-                self.im = self.im.resize((width, height), Image.ANTIALIAS) #downscaling
-            else:
-                self.im = self.im.resize((width, height), Image.BICUBIC)   #upscaling
-        self.im = self.im.convert("RGBA")
-    
     def openImage(self):
         self.file_path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
         if self.file_path == '':
             return
         if path.split(self.file_path)[-1].split('.')[1].lower() not in IMAGE_FORMATS:
-            self.statusBar.showMessage('No image')
+            self.statusBar.showMessage(self.tr('No image'))
             return
         
         #place for dialog crop
         ui = CropDialog(self.file_path)      
         ui.exec_()
-        
-        
+        try:
+            self.clear_im = Image.new(size=ui.im.size, mode=ui.im.mode)
+            self.clear_im.paste(ui.im)
+        except:
+            print("Got exception")
+            return
         
         #end of place for dialog crop
         if not self.name.isEnabled():
             self.name.setEnabled(True)
-        if not self.check_slide.isEnabled():
+        if self.clear_im.size[0] == 600:
             self.check_slide.setEnabled(True)
-        if not self.combo_versionKindle.isEnabled():
-            self.combo_versionKindle.setEnabled(True)
+            self.check_slide.setChecked(True)
+        else:
+            if self.check_slide.isEnabled():
+                self.check_slide.setEnabled(False)
+            if self.check_slide.isChecked():
+                self.check_slide.setChecked(False)
+        
+        
         if not self.radio_leftupper.isChecked():
             self.radio_leftupper.setChecked(True)
         if self.name.text():
             self.name.setText("")
         if self.surname.text():
             self.surname.setText("")
+        self.label_image.setFixedWidth(self.clear_im.size[0]/2)
+        self.label_image.setFixedHeight(self.clear_im.size[1]/2)
         self.surnameState()
         self.redraw()
         
         self.open_path.setText(self.file_path)
         self.statusBar.showMessage(self.tr("Opened file"))
-          
+    
+    def pasteImage(self):
+        
+        self.im = Image.new(size=self.clear_im.size, mode=self.clear_im.mode)
+        self.im.paste(self.clear_im)
+        
     def saveImage(self):
         
         default = self.tr("Sample")
@@ -672,14 +669,14 @@ class Window(QtGui.QMainWindow):
     def initActions(self):
         
         self.action_Exit.triggered.connect(self.close)
-        self.check_slide.stateChanged.connect(lambda: self.redraw(False))
+        self.check_slide.stateChanged.connect(self.redraw)
         self.button_open.clicked.connect(self.openImage)
         self.button_create.clicked.connect(self.saveImage)
-        self.name.textChanged.connect(lambda: self.redraw(False))
+        self.name.textChanged.connect(self.redraw)
         self.name.textChanged.connect(self.surnameState)
-        self.surname.textChanged.connect(lambda: self.redraw(False))
-        self.radio_Black.clicked.connect(lambda: self.redraw(False))
-        self.radio_White.clicked.connect(lambda: self.redraw(False))
+        self.surname.textChanged.connect(self.redraw)
+        self.radio_Black.clicked.connect(self.redraw)
+        self.radio_White.clicked.connect(self.redraw)
         self.radio_leftlower.clicked.connect(self.placeText)
         self.radio_leftupper.clicked.connect(self.placeText)
         self.radio_rightlower.clicked.connect(self.placeText)
