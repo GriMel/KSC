@@ -3,7 +3,7 @@
 
 from PyQt4 import QtGui, QtCore
 from PIL import Image, ImageDraw, ImageFont, ImageQt
-from math import floor
+from math import floor, ceil
 import sys
 import re
 from os import path
@@ -16,22 +16,29 @@ except AttributeError:
 
 LABEL = "resources/label.png"
 SAVE_PATH = "output/"
-#FONT = "resources/CaeciliaLTStd-Bold.otf"
 FONT = "resources/Caecilia Regular.ttf"
+FONT_SIZE = 40
 ICON = "resources/Kindle.png"
+IMAGE_FORMATS = ['bmp', 'dcx', 'eps', 'ps', 'gif', 'im', 'jpg', 'jpeg',
+                 'jpe', 'pcd', 'pcx', 'pdf', 'png', 'pbm', 'pgm', 'ppm',
+                 'psd', 'tif', 'tiff', 'xmb', 'xpm']
+
 class CropDialog(QtGui.QDialog):
     
     def __init__(self, im):
         super(CropDialog, self).__init__()
         self.initUI()
-        self.im = Image.open(im)
-        self.putImage()
+        self.im_path = im
         self.initVariables()
+        self.redrawImage()
+        self.initActions()
+        self.checkActive()
     
     def initVariables(self):
         
-        self.delta = None
-        
+        self.delta_left = None
+        self.delta_right = None
+                
     def initUI(self):
         
         self.resize(550, 500)
@@ -49,12 +56,21 @@ class CropDialog(QtGui.QDialog):
         self.combo_versionKindle.addItem("")
         self.combo_versionKindle.addItem("")
         self.combo_versionKindle.addItem("")
+        self.combo_versionKindle.addItem("")
         self.ButtonHorLayout.addWidget(self.combo_versionKindle)
         
+        self.OkCropVerLayout = QtGui.QVBoxLayout(self)
         self.push_crop = QtGui.QPushButton(self)
-        self.push_crop.setMinimumSize(QtCore.QSize(0, 20))
+        self.push_crop.setMinimumSize(QtCore.QSize(0, 30))
         self.push_crop.setObjectName("push_crop")
-        self.ButtonHorLayout.addWidget(self.push_crop)
+        self.push_ok = QtGui.QPushButton(self)
+        self.push_ok.setMinimumSize(QtCore.QSize(0, 30))
+        self.push_ok.setObjectName("push_ok")
+        self.push_ok.setEnabled(False)
+        self.OkCropVerLayout.addWidget(self.push_crop)
+        self.OkCropVerLayout.addWidget(self.push_ok)
+        
+        self.ButtonHorLayout.addLayout(self.OkCropVerLayout)
         self.MainLayout.addLayout(self.ButtonHorLayout)
         self.ImHorLayout = QtGui.QHBoxLayout()
         self.ImHorLayout.setObjectName(_fromUtf8("ImHorLayout"))
@@ -83,17 +99,22 @@ class CropDialog(QtGui.QDialog):
     def retranslateUi(self, CropDialog):
         CropDialog.setWindowTitle("Crop Image")
         self.label_version.setText("Choose version of Kindle")
-        self.combo_versionKindle.setItemText(0, "Kindle 3, 4, 5, Touch (800 x 600)")
-        self.combo_versionKindle.setItemText(1, "Kindle DX (1024 x 842)")
-        self.combo_versionKindle.setItemText(2, "Kindle PaperWhite (1200 x 824)")
+        self.combo_versionKindle.setItemText(0, "Kindle 3 (800 x 600)")
+        self.combo_versionKindle.setItemText(1, "Kindle 4, 5, Touch (800 x 600)")
+        self.combo_versionKindle.setItemText(2, "Kindle DX (1024 x 842)")
+        self.combo_versionKindle.setItemText(3, "Kindle PaperWhite (1200 x 824)")
         self.push_crop.setText("Crop")
+        self.push_ok.setText("OK")
         self.push_left.setText("<")
         self.label_image.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
         self.push_right.setText(">")
+    
+    def openImage(self):
+        
+        self.im = Image.open(self.im_path)
         
     def putImage(self):
         
-        self.resizeImage()
         height = self.im.size[1]/2
         width = self.im.size[0]/2
         self.label_image.setFixedHeight(height)
@@ -108,25 +129,83 @@ class CropDialog(QtGui.QDialog):
     def resizeImage(self):
         s = self.combo_versionKindle.currentText()
         pattern = re.compile(r"(\d*).x.(\d*)")
-        height = int(re.search(pattern, s).group(1))
-        width = int(re.search(pattern, s).group(2))
+        self.height_need = int(re.search(pattern, s).group(1))
+        self.width_need = int(re.search(pattern, s).group(2))
         self.im = self.im.convert("RGB")
         
-        new_height = height
+        new_height = self.height_need
         ratio = new_height/self.im.size[1]
-        print(ratio)
-        new_width = floor(ratio*self.im.size[0])
+        new_width = ceil(ratio*self.im.size[0])
         
-        if self.im.size != (width, height):
-            if self.im.size > (width, height):
+        if ratio != 1.0:
+            if self.im.size > (self.width_need, self.height_need):
                 #self.im = self.im.resize((width, height), Image.ANTIALIAS) #downscaling
                 self.im = self.im.resize((new_width, new_height), Image.ANTIALIAS)
             else:
                 #self.im = self.im.resize((width, height), Image.BICUBIC)   #upscaling
                 self.im = self.im.resize((new_width, new_height), Image.BICUBIC)
         self.im = self.im.convert("RGBA")
-        print(self.im.size)
-
+    
+    def blackImage(self, default=True):
+        
+        im_width = self.im.size[0]
+        im_height = self.im.size[1]
+        if im_width > self.width_need:
+            if default:
+                self.delta_left = self.delta_right = (im_width - self.width_need)/2
+            draw = ImageDraw.Draw(self.im)
+            draw.rectangle([0, 0, self.delta_left, self.height_need], fill="Black")
+            draw.rectangle([im_width-self.delta_right, 0, im_width, im_height], fill="Black") 
+        else:
+            #set OK active
+            #set Crop inactive
+            return
+    
+    def changeBlack(self):
+        
+        if self.sender().objectName() == "push_right":
+            self.delta_left +=10
+            self.delta_right -=10
+        else:
+            self.delta_left -=10
+            self.delta_right +=10
+        
+        if self.delta_left < 0: self.delta_left = 0; self.delta_right = self.im.size[0] - self.width_need
+        if self.delta_right < 0: self.delta_right = 0; self.delta_left = self.im.size[0] - self.width_need
+        
+        self.redrawImage(default=False)
+        
+    def cropImage(self):
+        
+        width = self.im.size[0]
+        height = self.im.size[1]
+        print(width - self.delta_right, " crop")
+        self.im = self.im.crop((floor(self.delta_left), 0,floor(self.delta_left) + self.width_need,height))
+        self.putImage()
+        self.checkActive()
+        
+    def redrawImage(self, default=True):
+        self.openImage()
+        self.resizeImage()
+        self.blackImage(default)
+        self.putImage()
+        self.checkActive()
+        
+    def checkActive(self):
+        
+        if self.im.size[0] <= self.width_need:
+            self.push_crop.setEnabled(False)
+            self.push_ok.setEnabled(True)
+            self.push_left.setEnabled(False)
+            self.push_right.setEnabled(False)
+    
+    def initActions(self):
+        
+        self.push_left.clicked.connect(self.changeBlack)
+        self.push_right.clicked.connect(self.changeBlack)
+        self.push_crop.clicked.connect(self.cropImage)
+        self.combo_versionKindle.currentIndexChanged.connect(self.redrawImage)
+    
 class Window(QtGui.QMainWindow):
     
     def __init__(self):
@@ -147,8 +226,6 @@ class Window(QtGui.QMainWindow):
         self.is_label = True
         self.is_text = False
         
-        self.font_size = 40
-        self.font = ImageFont.truetype(FONT, self.font_size)
         self.im = None
         self.clear_pic = None
         self.label = Image.open(LABEL).convert("RGBA")
@@ -354,7 +431,6 @@ class Window(QtGui.QMainWindow):
         self.menuBar.addAction(self.menuMain.menuAction())
 
         QtCore.QMetaObject.connectSlotsByName(self)
-
     def retranslateUi(self):
         self.setWindowTitle("Kindle ScreenSaver Creator")
         
@@ -437,9 +513,9 @@ class Window(QtGui.QMainWindow):
             self.resizeImage()
         
         if self.is_text:
-            size = self.font_size
+            size = FONT_SIZE
             draw = ImageDraw.Draw(self.im)
-            font = self.font
+            font = ImageFont.truetype(FONT, self.font_size)
             text_color = "White"
             if self.radio_Black.isChecked():
                 text_color = "Black"
@@ -522,10 +598,13 @@ class Window(QtGui.QMainWindow):
         self.im = self.im.convert("RGBA")
     
     def openImage(self):
-        try:
-            self.file_path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
-        except:
-            self.statusBar.showMessage('Wrong file name')
+        self.file_path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
+        if self.file_path == '':
+            return
+        if path.split(self.file_path)[-1].split('.')[1].lower() not in IMAGE_FORMATS:
+            self.statusBar.showMessage('No image')
+            return
+        
         #place for dialog crop
         ui = CropDialog(self.file_path)      
         ui.exec_()
@@ -633,7 +712,8 @@ def main():
     sys.exit(app.exec_())
     
 def test():
-    print("Абірвалг")
+    r = None
+    print(r)
 if __name__ == '__main__':
     main()
     #test()
