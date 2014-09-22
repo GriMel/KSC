@@ -95,21 +95,30 @@ class CropDialog(QtGui.QDialog):
         self.ImHorLayout.addWidget(self.push_right)
         self.MainLayout.addLayout(self.ImHorLayout)
 
-        self.retranslateUi(self)
+        self.retranslateUi()
+        self.centerUI()
         QtCore.QMetaObject.connectSlotsByName(self)
 
-    def retranslateUi(self, CropDialog):
-        CropDialog.setWindowTitle("Crop Image")
+    def retranslateUi(self):
+        
+        self.setWindowTitle(self.tr("Crop Image"))
         self.label_version.setText("Choose version of Kindle")
         self.combo_versionKindle.setItemText(0, "Kindle 3 (800 x 600)")
         self.combo_versionKindle.setItemText(1, "Kindle 4, 5, Touch (800 x 600)")
         self.combo_versionKindle.setItemText(2, "Kindle DX (1024 x 842)")
         self.combo_versionKindle.setItemText(3, "Kindle PaperWhite (1200 x 824)")
-        self.push_crop.setText("Crop")
-        self.push_ok.setText("OK")
+        self.push_crop.setText(self.tr("Crop"))
+        self.push_ok.setText(self.tr("OK"))
         self.push_left.setText("<")
         self.label_image.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
         self.push_right.setText(">")
+        
+    def centerUI(self):
+        
+        qr = self.frameGeometry()
+        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
     
     def openImage(self):
         
@@ -174,8 +183,6 @@ class CropDialog(QtGui.QDialog):
             draw.rectangle([0, 0, self.delta_left, self.height_need], fill="Black")
             draw.rectangle([im_width-self.delta_right, 0, im_width, im_height], fill="Black") 
         else:
-            #set OK active
-            #set Crop inactive
             return
     
     def changeBlack(self):
@@ -398,8 +405,8 @@ class Window(QtGui.QMainWindow):
         self.label_image.setMinimumSize(QtCore.QSize(300, 400))
         self.label_image.setMaximumSize(QtCore.QSize(300, 400))
         self.label_image.setStyleSheet(_fromUtf8("border-style: solid;\n"
-                                                   "border-width: 1px;\n"
-                                                   "border-color: white;"))
+                                                 "border-width: 1px;\n"
+                                                 "border-color: white;"))
         self.RightVertLayout.addWidget(self.label_image)
         #------------------------------------------
         self.grid_arrows = QtGui.QGridLayout()
@@ -432,16 +439,21 @@ class Window(QtGui.QMainWindow):
         self.action_Exit = QtGui.QAction(self)
         self.menuMain.addAction(self.action_Exit)
         self.menuLanguage = QtGui.QMenu(self.menuMain)
-        self.actionRussian = QtGui.QAction(self)
         self.actionEnglish = QtGui.QAction(self)
+        self.actionEnglish.setObjectName("en")
+        self.actionRussian = QtGui.QAction(self)
+        self.actionRussian.setObjectName("ru")
         self.actionUkrainian = QtGui.QAction(self)
+        self.actionUkrainian.setObjectName("ukr")
         self.menuLanguage.addAction(self.actionEnglish)
         self.menuLanguage.addAction(self.actionRussian)
         self.menuLanguage.addAction(self.actionUkrainian)
         self.menuMain.addAction(self.menuLanguage.menuAction())
         self.menuBar.addAction(self.menuMain.menuAction())
-
+        
+        self.centerUI()
         QtCore.QMetaObject.connectSlotsByName(self)
+
     def retranslateUi(self):
         self.setWindowTitle("Kindle ScreenSaver Creator")
         
@@ -478,6 +490,13 @@ class Window(QtGui.QMainWindow):
         self.actionEnglish.setText("English")
         self.actionRussian.setText("Русский")
         self.actionUkrainian.setText("Українська")
+    
+    def centerUI(self):
+        
+        qr = self.frameGeometry()
+        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
         
     def initStateUI(self, enabled):
                       
@@ -624,6 +643,9 @@ class Window(QtGui.QMainWindow):
         self.label_image.setFixedWidth(self.clear_im.size[0]/2)
         self.label_image.setFixedHeight(self.clear_im.size[1]/2)
         self.surnameState()
+        self.button_create.setEnabled(True)
+        self.text_x = 10
+        self.text_y = 10
         self.redraw()
         
         self.open_path.setText(self.file_path)
@@ -636,7 +658,7 @@ class Window(QtGui.QMainWindow):
         
     def saveImage(self):
         
-        default = self.tr("Sample")
+        default = self.tr(self.tr("Sample"))
         name = ""
         self.redraw()
         if self.name.text():
@@ -692,22 +714,23 @@ class Window(QtGui.QMainWindow):
         self.button_down.pressed.connect(self.moveText)
         self.button_left.pressed.connect(self.moveText)
         self.button_right.pressed.connect(self.moveText)
-        self.actionRussian.triggered.connect(self.translate_ru)
-        self.actionEnglish.triggered.connect(self.translate_en)
+        self.actionRussian.triggered.connect(self.translateUI)
+        self.actionEnglish.triggered.connect(self.translateUI)
+        self.actionUkrainian.triggered.connect(self.translateUI)
     
-    def translate_ru(self):
+    def translateUI(self):
+        
         app = QtGui.QApplication.instance()
-        path = "ru.qm"
-        print(self.language_translator.load(path))
-        app.installTranslator(self.language_translator)
+        language_translator = QtCore.QTranslator()
+        if "en" in self.sender().objectName():
+            print("English")
+            pass
+        else:
+            print("Rus or Ukr")
+            path = self.sender().objectName() + ".qm"
+            language_translator.load(path)
+        app.installTranslator(language_translator)
         self.retranslateUi()
-    
-    def translate_en(self):
-        app = QtGui.QApplication.instance()
-        self.language_translator = QtCore.QTranslator()
-        app.installTranslator(self.language_translator)
-        self.retranslateUi()
-    
         
 def main():
     app = QtGui.QApplication(sys.argv)
