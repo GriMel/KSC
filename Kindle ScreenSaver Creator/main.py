@@ -97,11 +97,11 @@ class CropDialog(QtGui.QDialog):
         self.ImHorLayout.addWidget(self.push_right)
         self.MainLayout.addLayout(self.ImHorLayout)
 
-        self.retranslateUi()
+        self.retranslateUI()
         self.centerUI()
         QtCore.QMetaObject.connectSlotsByName(self)
 
-    def retranslateUi(self):
+    def retranslateUI(self):
         
         self.setWindowTitle(self.tr("Crop Image"))
         self.label_version.setText(self.tr("Choose version of Kindle"))
@@ -118,7 +118,7 @@ class CropDialog(QtGui.QDialog):
     def translateUI(self):
         
         app = QtGui.QApplication.instance()
-        language_translator = QtCore.QTranslator()
+        self.language_translator = QtCore.QTranslator()
         print(self.language)
         if "en" in self.language:
             print("English chosen")
@@ -126,9 +126,9 @@ class CropDialog(QtGui.QDialog):
         else:
             print("Russian chosen")
             path = self.language + ".qm"
-            print(language_translator.load(path))
-        app.installTranslator(language_translator)
-        self.retranslateUi()
+            print(self.language_translator.load(path))
+        app.installTranslator(self.language_translator)
+        self.retranslateUI()
         
     def centerUI(self):
         
@@ -265,18 +265,17 @@ class Window(QtGui.QMainWindow):
         super(Window, self).__init__()
         self.im = ""
         self.initUI()
-        self.retranslateUi()
+        self.retranslateUI()
         self.initStateUI(False)
-        self.initActions()
         self.initVariables()
         self.loadUI()
+        self.initActions()
         
     def initVariables(self):
         
         self.language_translator = QtCore.QTranslator()
         self.text_x = 10
         self.text_y = 10
-        self.language = "en"
         self.text_color = None
         self.is_label = True
         self.is_text = False
@@ -473,7 +472,7 @@ class Window(QtGui.QMainWindow):
         self.centerUI()
         QtCore.QMetaObject.connectSlotsByName(self)
 
-    def retranslateUi(self):
+    def retranslateUI(self):
         self.setWindowTitle("Kindle ScreenSaver Creator")
         
         #for ico files 
@@ -623,7 +622,12 @@ class Window(QtGui.QMainWindow):
             self.text_y -= dy        
         
     def openImage(self):
+        #filedialog = QtGui.QFileDialog(self)
+        #filedialog.setLabelText(filedialog.Accept, self.tr('Open'))
+        #filedialog.setLabelText(filedialog.Reject, self.tr('Cancel'))
+        #self.file_path = filedialog.getOpenFileName(self, self.tr('Open file'), '/home')
         self.file_path = QtGui.QFileDialog.getOpenFileName(self, self.tr('Open file'), '/home')
+        
         if self.file_path == '':
             return
         if path.split(self.file_path)[-1].split('.')[1].lower() not in IMAGE_FORMATS:
@@ -678,7 +682,7 @@ class Window(QtGui.QMainWindow):
         
     def saveImage(self):
         
-        default = self.tr(self.tr("Sample"))
+        default = self.tr("Sample")
         name = ""
         self.redraw()
         if self.name.text():
@@ -741,7 +745,7 @@ class Window(QtGui.QMainWindow):
     def translateUI(self, no_sent = False):
         
         app = QtGui.QApplication.instance()
-        language_translator = QtCore.QTranslator()
+        self.language_translator = QtCore.QTranslator()
         if not no_sent:
             self.language = self.sender().objectName()
         
@@ -751,9 +755,10 @@ class Window(QtGui.QMainWindow):
         else:
             print("Rus or Ukr")
             path = self.language + ".qm"
-            language_translator.load(path)
-        app.installTranslator(language_translator)
-        self.retranslateUi()
+            self.language_translator.load(path)
+        app.installTranslator(self.language_translator)
+        self.retranslateUI()
+        
     
     def saveUI(self):
         
