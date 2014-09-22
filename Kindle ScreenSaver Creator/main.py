@@ -32,7 +32,7 @@ class CropDialog(QtGui.QDialog):
         self.initUI()
         self.im_path = im_path
         self.initVariables()
-        self.redrawImage()
+        self.openImage()
         self.initActions()
         self.checkActive()
     
@@ -114,11 +114,21 @@ class CropDialog(QtGui.QDialog):
     def openImage(self):
         
         self.clear_im = Image.open(self.im_path)
+        self.setgrayscaleImage()
+        self.resizeImage()
+        self.im = Image.new(size=self.clear_im.size, mode=self.clear_im.mode)
+        self.im.paste(self.clear_im)
+        self.blackImage(True)
+        self.putImage()
+        self.checkActive()
         
     def pasteImage(self):
         
         self.im = Image.new(size=self.clear_im.size, mode=self.clear_im.mode)
-        self.im.paste(self.im)
+        self.im.paste(self.clear_im)
+        self.blackImage(False)
+        self.putImage()
+        self.checkActive()
         
     def putImage(self):
         
@@ -138,21 +148,20 @@ class CropDialog(QtGui.QDialog):
         pattern = re.compile(r"(\d*).x.(\d*)")
         self.height_need = int(re.search(pattern, s).group(1))
         self.width_need = int(re.search(pattern, s).group(2))
-        self.im = self.im.convert("RGB")
+        self.clear_im = self.clear_im.convert("RGB")
         
         new_height = self.height_need
-        ratio = new_height/self.im.size[1]
-        new_width = ceil(ratio*self.im.size[0])
+        ratio = new_height/self.clear_im.size[1]
+        new_width = ceil(ratio*self.clear_im.size[0])
         
         if ratio != 1.0:
-            if self.im.size > (self.width_need, self.height_need):
+            if self.clear_im.size > (self.width_need, self.height_need):
                 #self.im = self.im.resize((width, height), Image.ANTIALIAS) #downscaling
-                self.im = self.im.resize((new_width, new_height), Image.ANTIALIAS)
+                self.clear_im = self.clear_im.resize((new_width, new_height), Image.ANTIALIAS)
             else:
                 #self.im = self.im.resize((width, height), Image.BICUBIC)   #upscaling
-                self.im = self.im.resize((new_width, new_height), Image.BICUBIC)
-        self.im = self.im.convert("RGBA")
-        self.checkActive()
+                self.clear_im = self.clear_im.resize((new_width, new_height), Image.BICUBIC)
+        self.clear_im = self.clear_im.convert("RGBA")
     
     def blackImage(self, default=True):
         
@@ -181,7 +190,7 @@ class CropDialog(QtGui.QDialog):
         if self.delta_left < 0: self.delta_left = 0; self.delta_right = self.im.size[0] - self.width_need
         if self.delta_right < 0: self.delta_right = 0; self.delta_left = self.im.size[0] - self.width_need
         
-        self.redrawImage(default=False)
+        self.pasteImage()
         
     def cropImage(self):
         
@@ -191,23 +200,15 @@ class CropDialog(QtGui.QDialog):
         self.im = self.im.crop((floor(self.delta_left), 0,floor(self.delta_left) + self.width_need,height))
         self.putImage()
         self.checkActive()
-        
-    def redrawImage(self, default=True):
-        self.openImage()
-        self.setgrayscaleImage()
-        self.resizeImage()
-        self.blackImage(default)
-        self.putImage()
-        self.checkActive()
     
     def setgrayscaleImage(self):
         
-        width,height = self.im.size
+        width,height = self.clear_im.size
         for i in range(width):
             for j in range(height):
                 print("Still here")
-                r,g,b = self.im.getpixel((i,j))
-                if r!= g != b: self.im = self.im.convert("LA"); self.im = self.im.convert("RGBA"); return
+                r,g,b = self.clear_im.getpixel((i,j))
+                if r!= g != b: self.clear_im = self.clear_im.convert("LA"); self.clear_im = self.clear_im.convert("RGBA"); return
     
     def closeEvent(self, event):
         print(self.sender().objectName())
@@ -231,7 +232,7 @@ class CropDialog(QtGui.QDialog):
         self.push_left.clicked.connect(self.changeBlack)
         self.push_right.clicked.connect(self.changeBlack)
         self.push_crop.clicked.connect(self.cropImage)
-        self.combo_versionKindle.currentIndexChanged.connect(self.redrawImage)
+        self.combo_versionKindle.currentIndexChanged.connect(self.openImage)
         self.push_ok.clicked.connect(self.close)
     
 class Window(QtGui.QMainWindow):
@@ -241,7 +242,7 @@ class Window(QtGui.QMainWindow):
         self.im = ""
         self.initUI()
         self.retranslateUi()
-        self.setState(False)
+        self.initStateUI(False)
         self.initActions()
         self.initVariables()
         
@@ -478,7 +479,7 @@ class Window(QtGui.QMainWindow):
         self.actionRussian.setText("Русский")
         self.actionUkrainian.setText("Українська")
         
-    def setState(self, enabled):
+    def initStateUI(self, enabled):
                       
         self.name.setEnabled(enabled)
         self.surname.setEnabled(enabled)
@@ -493,6 +494,7 @@ class Window(QtGui.QMainWindow):
         self.button_right.setEnabled(enabled)
         self.button_up.setEnabled(enabled)
         self.button_down.setEnabled(enabled)
+        self.button_create.setEnabled(enabled)
 
     def putImage(self):
         
@@ -502,7 +504,7 @@ class Window(QtGui.QMainWindow):
     
     
     
-    def redraw(self, glob_redraw=False):
+    def redraw(self):
         
         self.is_label = self.check_slide.isChecked()
         self.is_text = self.name.text() or self.surname.text()
@@ -603,7 +605,7 @@ class Window(QtGui.QMainWindow):
         #end of place for dialog crop
         if not self.name.isEnabled():
             self.name.setEnabled(True)
-        if self.clear_im.size[0] == 600:
+        if self.clear_im.size[0] <= 600:
             self.check_slide.setEnabled(True)
             self.check_slide.setChecked(True)
         else:
@@ -636,7 +638,7 @@ class Window(QtGui.QMainWindow):
         
         default = self.tr("Sample")
         name = ""
-        self.redraw(glob_redraw=True)
+        self.redraw()
         if self.name.text():
             name+=self.name.text()
         if self.surname.text():
