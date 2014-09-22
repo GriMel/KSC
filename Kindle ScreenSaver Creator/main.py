@@ -16,11 +16,11 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
-LABEL = "resources/label.png"
+LABEL = "src/label.png"
 SAVE_PATH = "output/"
-FONT = "resources/Caecilia Regular.ttf"
+FONT = "src/Caecilia Regular.ttf"
 FONT_SIZE = 40
-ICON = "resources/Kindle.png"
+ICON = "src/Kindle.png"
 IMAGE_FORMATS = ['bmp', 'dcx', 'eps', 'ps', 'gif', 'im', 'jpg', 'jpeg',
                  'jpe', 'pcd', 'pcx', 'pdf', 'png', 'pbm', 'pgm', 'ppm',
                  'psd', 'tif', 'tiff', 'xmb', 'xpm']
