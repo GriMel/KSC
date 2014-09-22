@@ -27,10 +27,10 @@ IMAGE_FORMATS = ['bmp', 'dcx', 'eps', 'ps', 'gif', 'im', 'jpg', 'jpeg',
 
 class CropDialog(QtGui.QDialog):
     
-    def __init__(self, im):
+    def __init__(self, im_path):
         super(CropDialog, self).__init__()
         self.initUI()
-        self.im_path = im
+        self.im_path = im_path
         self.initVariables()
         self.redrawImage()
         self.initActions()
@@ -113,7 +113,12 @@ class CropDialog(QtGui.QDialog):
     
     def openImage(self):
         
-        self.im = Image.open(self.im_path)
+        self.clear_im = Image.open(self.im_path)
+        
+    def pasteImage(self):
+        
+        self.im = Image.new(size=self.clear_im.size, mode=self.clear_im.mode)
+        self.im.paste(self.im)
         
     def putImage(self):
         
