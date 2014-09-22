@@ -27,11 +27,13 @@ IMAGE_FORMATS = ['bmp', 'dcx', 'eps', 'ps', 'gif', 'im', 'jpg', 'jpeg',
 
 class CropDialog(QtGui.QDialog):
     
-    def __init__(self, im_path):
+    def __init__(self, im_path, lang):
         super(CropDialog, self).__init__()
+        self.language = lang
         self.initUI()
         self.im_path = im_path
         self.initVariables()
+        self.translateUI()
         self.openImage()
         self.initActions()
         self.checkActive()
@@ -102,7 +104,7 @@ class CropDialog(QtGui.QDialog):
     def retranslateUi(self):
         
         self.setWindowTitle(self.tr("Crop Image"))
-        self.label_version.setText("Choose version of Kindle")
+        self.label_version.setText(self.tr("Choose version of Kindle"))
         self.combo_versionKindle.setItemText(0, "Kindle 3 (800 x 600)")
         self.combo_versionKindle.setItemText(1, "Kindle 4, 5, Touch (800 x 600)")
         self.combo_versionKindle.setItemText(2, "Kindle DX (1024 x 842)")
@@ -112,6 +114,21 @@ class CropDialog(QtGui.QDialog):
         self.push_left.setText("<")
         self.label_image.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
         self.push_right.setText(">")
+        
+    def translateUI(self):
+        
+        app = QtGui.QApplication.instance()
+        language_translator = QtCore.QTranslator()
+        print(self.language)
+        if "en" in self.language:
+            print("English chosen")
+            pass
+        else:
+            print("Russian chosen")
+            path = self.language + ".qm"
+            print(language_translator.load(path))
+        app.installTranslator(language_translator)
+        self.retranslateUi()
         
     def centerUI(self):
         
@@ -252,12 +269,14 @@ class Window(QtGui.QMainWindow):
         self.initStateUI(False)
         self.initActions()
         self.initVariables()
+        self.loadUI()
         
     def initVariables(self):
         
         self.language_translator = QtCore.QTranslator()
         self.text_x = 10
         self.text_y = 10
+        self.language = "en"
         self.text_color = None
         self.is_label = True
         self.is_text = False
@@ -514,7 +533,7 @@ class Window(QtGui.QMainWindow):
         self.button_up.setEnabled(enabled)
         self.button_down.setEnabled(enabled)
         self.button_create.setEnabled(enabled)
-
+        
     def putImage(self):
         
         pixmap = QtGui.QPixmap.fromImage(ImageQt.ImageQt(self.im))
@@ -604,7 +623,7 @@ class Window(QtGui.QMainWindow):
             self.text_y -= dy        
         
     def openImage(self):
-        self.file_path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
+        self.file_path = QtGui.QFileDialog.getOpenFileName(self, self.tr('Open file'), '/home')
         if self.file_path == '':
             return
         if path.split(self.file_path)[-1].split('.')[1].lower() not in IMAGE_FORMATS:
@@ -612,7 +631,8 @@ class Window(QtGui.QMainWindow):
             return
         
         #place for dialog crop
-        ui = CropDialog(self.file_path)      
+        print(self.language, " current language")
+        ui = CropDialog(self.file_path, lang = self.language)      
         ui.exec_()
         try:
             self.clear_im = Image.new(size=ui.im.size, mode=ui.im.mode)
@@ -718,19 +738,38 @@ class Window(QtGui.QMainWindow):
         self.actionEnglish.triggered.connect(self.translateUI)
         self.actionUkrainian.triggered.connect(self.translateUI)
     
-    def translateUI(self):
+    def translateUI(self, no_sent = False):
         
         app = QtGui.QApplication.instance()
         language_translator = QtCore.QTranslator()
-        if "en" in self.sender().objectName():
+        if not no_sent:
+            self.language = self.sender().objectName()
+        
+        if "en" in self.language:
             print("English")
             pass
         else:
             print("Rus or Ukr")
-            path = self.sender().objectName() + ".qm"
+            path = self.language + ".qm"
             language_translator.load(path)
         app.installTranslator(language_translator)
         self.retranslateUi()
+    
+    def saveUI(self):
+        
+        self.settings = QtCore.QSettings("src/src.ini", QtCore.QSettings.IniFormat)
+        self.settings.setValue("language", self.language)
+        
+        
+    def loadUI(self):
+        
+        self.settings = QtCore.QSettings("src/src.ini", QtCore.QSettings.IniFormat)
+        self.language = self.settings.value("language")
+        self.translateUI(no_sent=True)
+    
+    def closeEvent(self, event):
+        
+        self.saveUI()
         
 def main():
     app = QtGui.QApplication(sys.argv)
