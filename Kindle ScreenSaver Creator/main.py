@@ -16,7 +16,11 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
-LABEL = "src/label.png"
+LABEL_DX = "src/slide_1200x824.png"
+LABEL_3 = "src/slide_800x600.png"
+LABEL_PAPER_1 = "src/click_1024x758.png"
+LABEL_1024 = "src/click_1024x768.png"
+LABEL_800 = "src/click_800x600.png"
 SAVE_PATH = "output/"
 FONT = "src/Caecilia Regular.ttf"
 FONT_SIZE = 40
@@ -27,9 +31,10 @@ IMAGE_FORMATS = ['bmp', 'dcx', 'eps', 'ps', 'gif', 'im', 'jpg', 'jpeg',
 
 class CropDialog(QtGui.QDialog):
     
-    def __init__(self, im_path, lang):
+    def __init__(self, im_path, lang, version=1):
         super(CropDialog, self).__init__()
         self.language = lang
+        self.version = version
         self.initUI()
         self.im_path = im_path
         self.initVariables()
@@ -54,6 +59,8 @@ class CropDialog(QtGui.QDialog):
         self.label_version.setObjectName(_fromUtf8("label_version"))
         self.ButtonHorLayout.addWidget(self.label_version)
         
+        self.VerVerLayout = QtGui.QVBoxLayout(self)
+        self.check_versionKindle = QtGui.QCheckBox(self)
         self.combo_versionKindle = QtGui.QComboBox(self)
         self.combo_versionKindle.setMinimumSize(QtCore.QSize(0, 20))
         self.combo_versionKindle.setObjectName("combo_versionKindle")
@@ -61,7 +68,10 @@ class CropDialog(QtGui.QDialog):
         self.combo_versionKindle.addItem("")
         self.combo_versionKindle.addItem("")
         self.combo_versionKindle.addItem("")
-        self.ButtonHorLayout.addWidget(self.combo_versionKindle)
+        self.combo_versionKindle.addItem("")
+        self.VerVerLayout.addWidget(self.check_versionKindle)
+        self.VerVerLayout.addWidget(self.combo_versionKindle)
+        self.ButtonHorLayout.addLayout(self.VerVerLayout)
         
         self.OkCropVerLayout = QtGui.QVBoxLayout(self)
         self.push_crop = QtGui.QPushButton(self)
@@ -105,10 +115,13 @@ class CropDialog(QtGui.QDialog):
         
         self.setWindowTitle(self.tr("Crop Image"))
         self.label_version.setText(self.tr("Choose version of Kindle"))
-        self.combo_versionKindle.setItemText(0, "Kindle 3 (800 x 600)")
-        self.combo_versionKindle.setItemText(1, "Kindle 4, 5, Touch (800 x 600)")
-        self.combo_versionKindle.setItemText(2, "Kindle DX (1024 x 842)")
-        self.combo_versionKindle.setItemText(3, "Kindle PaperWhite (1200 x 824)")
+        self.check_versionKindle.setText(self.tr("Default"))
+        self.combo_versionKindle.setItemText(0, "Kindle DX (1200 x 824)")
+        self.combo_versionKindle.setItemText(1, "Kindle 3 (800 x 600)")
+        self.combo_versionKindle.setItemText(2, "Kindle 4, 5, Touch (800 x 600)")
+        self.combo_versionKindle.setItemText(3, "Kindle Paperwhite 1 (1024 x 758)")
+        self.combo_versionKindle.setItemText(4, "Kindle Paperwhite 2 (1024 x 768)")
+        self.combo_versionKindle.setCurrentIndex(self.version)
         self.push_crop.setText(self.tr("Crop"))
         self.push_ok.setText(self.tr("OK"))
         self.push_left.setText("<")
@@ -250,6 +263,19 @@ class CropDialog(QtGui.QDialog):
         self.push_ok.setEnabled(state)
         self.push_left.setEnabled(not state)
         self.push_right.setEnabled(not state)
+        #NEW
+        if self.version == self.combo_versionKindle.currentIndex():
+            self.check_versionKindle.setEnabled(False)
+        else:
+            self.check_versionKindle.setEnabled(True)
+            self.check_versionKindle.setChecked(False)
+    
+    def changeVersion(self):
+        
+        print("CHANGE VERSIOn")
+        self.version = self.combo_versionKindle.currentIndex()
+        self.checkActive()
+        #NEW
     
     def initActions(self):
         
@@ -258,6 +284,7 @@ class CropDialog(QtGui.QDialog):
         self.push_crop.clicked.connect(self.cropImage)
         self.combo_versionKindle.currentIndexChanged.connect(self.openImage)
         self.push_ok.clicked.connect(self.close)
+        self.check_versionKindle.stateChanged.connect(self.changeVersion) #NEW
     
 class Window(QtGui.QMainWindow):
     
@@ -266,7 +293,7 @@ class Window(QtGui.QMainWindow):
         self.im = ""
         self.initUI()
         self.retranslateUI()
-        self.initStateUI(False)
+        self.initStateUI()
         self.initVariables()
         self.loadUI()
         self.initActions()
@@ -282,7 +309,8 @@ class Window(QtGui.QMainWindow):
         
         self.im = None
         self.clear_im = None
-        self.label = Image.open(LABEL).convert("RGBA")
+        #self.label = Image.open(LABEL).convert("RGBA")
+        self.label = None
         self.file_path = None
 
     def initUI(self):
@@ -516,30 +544,28 @@ class Window(QtGui.QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
         
-    def initStateUI(self, enabled):
+    def initStateUI(self):
                       
-        self.name.setEnabled(enabled)
-        self.surname.setEnabled(enabled)
-        self.radio_leftlower.setEnabled(enabled)
-        self.radio_leftupper.setEnabled(enabled)
-        self.radio_rightlower.setEnabled(enabled)
-        self.radio_rightupper.setEnabled(enabled)
-        self.radio_Black.setEnabled(enabled)
-        self.radio_White.setEnabled(enabled)
-        self.check_slide.setEnabled(enabled)
-        self.button_left.setEnabled(enabled)
-        self.button_right.setEnabled(enabled)
-        self.button_up.setEnabled(enabled)
-        self.button_down.setEnabled(enabled)
-        self.button_create.setEnabled(enabled)
+        self.name.setEnabled(False)
+        self.surname.setEnabled(False)
+        self.radio_leftlower.setEnabled(False)
+        self.radio_leftupper.setEnabled(False)
+        self.radio_rightlower.setEnabled(False)
+        self.radio_rightupper.setEnabled(False)
+        self.radio_Black.setEnabled(False)
+        self.radio_White.setEnabled(False)
+        self.check_slide.setEnabled(False)
+        self.button_left.setEnabled(False)
+        self.button_right.setEnabled(False)
+        self.button_up.setEnabled(False)
+        self.button_down.setEnabled(False)
+        self.button_create.setEnabled(False)
         
     def putImage(self):
         
         pixmap = QtGui.QPixmap.fromImage(ImageQt.ImageQt(self.im))
         pixmap = pixmap.scaled(self.label_image.size())
         self.label_image.setPixmap(pixmap)
-    
-    
     
     def redraw(self):
         
@@ -549,7 +575,11 @@ class Window(QtGui.QMainWindow):
         
         
         if self.is_label:
-            self.im.paste(self.label, (0, self.im.size[1] - self.label.size[1]), mask= self.label)
+            #self.im.paste(self.label, (0, self.im.size[1] - self.label.size[1]), mask= self.label)
+            if self.im.size != self.label.size:
+                self.label = self.label.resize(self.im.size)
+            self.im.paste(self.label, mask = self.label)
+            
         
         if self.is_text:
             size = FONT_SIZE
@@ -593,7 +623,8 @@ class Window(QtGui.QMainWindow):
         
         font = font
         size_x = self.im.size[0] - 10
-        size_y = self.im.size[1] - 10 - self.label.size[1]
+        #size_y = self.im.size[1] - 10 - self.label.size[1]
+        size_y = self.im.size[1] - 10 - 60
         text_height = 0
         text_lenght = 0
         name = self.name.text()
@@ -636,11 +667,13 @@ class Window(QtGui.QMainWindow):
         
         #place for dialog crop
         print(self.language, " current language")
-        ui = CropDialog(self.file_path, lang = self.language)      
+        print(type(self.version), " type self version")
+        ui = CropDialog(self.file_path, lang = self.language, version = self.version)      
         ui.exec_()
         try:
             self.clear_im = Image.new(size=ui.im.size, mode=ui.im.mode)
             self.clear_im.paste(ui.im)
+            self.version = ui.version
         except:
             print("Got exception")
             return
@@ -648,15 +681,23 @@ class Window(QtGui.QMainWindow):
         #end of place for dialog crop
         if not self.name.isEnabled():
             self.name.setEnabled(True)
-        if self.clear_im.size[0] <= 600:
-            self.check_slide.setEnabled(True)
-            self.check_slide.setChecked(True)
-        else:
-            if self.check_slide.isEnabled():
-                self.check_slide.setEnabled(False)
-            if self.check_slide.isChecked():
-                self.check_slide.setChecked(False)
         
+        kindle_version = ui.combo_versionKindle.currentText()
+        if "Kindle 3" in kindle_version:
+            self.label = Image.open(LABEL_3).convert("RGBA")
+        elif "DX" in kindle_version:
+            self.label = Image.open(LABEL_DX).convert("RGBA")
+        elif "Paperwhite 1" in kindle_version:
+            self.label = Image.open(LABEL_PAPER_1).convert("RGBA")
+        elif "Paperwhite 2" in kindle_version:
+            self.label = Image.open(LABEL_1024).convert("RGBA")
+        else:
+            self.label = Image.open(LABEL_800).convert("RGBA")
+            
+        print(self.label.mode)
+        
+        self.check_slide.setEnabled(True)
+        self.check_slide.setChecked(True)
         
         if not self.radio_leftupper.isChecked():
             self.radio_leftupper.setChecked(True)
@@ -679,6 +720,8 @@ class Window(QtGui.QMainWindow):
         
         self.im = Image.new(size=self.clear_im.size, mode=self.clear_im.mode)
         self.im.paste(self.clear_im)
+        print(self.im.mode, "im mode")
+        print(self.clear_im.mode, " clear_im mode")
         
     def saveImage(self):
         
@@ -716,6 +759,8 @@ class Window(QtGui.QMainWindow):
         self.button_right.setEnabled(enabled)
         self.button_up.setEnabled(enabled)
         self.button_down.setEnabled(enabled)
+        self.label_textcolor.setEnabled(enabled)
+        self.label_wherePlace.setEnabled(enabled)
         if not enabled:
             self.surname.setText("")
             
@@ -764,12 +809,19 @@ class Window(QtGui.QMainWindow):
         
         self.settings = QtCore.QSettings("src/src.ini", QtCore.QSettings.IniFormat)
         self.settings.setValue("language", self.language)
+        self.settings.setValue("version", self.version)
         
         
     def loadUI(self):
         
         self.settings = QtCore.QSettings("src/src.ini", QtCore.QSettings.IniFormat)
         self.language = self.settings.value("language")
+        self.version = int(self.settings.value("version"))
+        if not self.language:
+            self.language = "en"
+        if not self.version:
+            self.version = 0
+        print(type(self.version), " type self version")
         self.translateUI(no_sent=True)
     
     def closeEvent(self, event):
