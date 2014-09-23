@@ -42,7 +42,20 @@ class CropDialog(QtGui.QDialog):
         self.openImage()
         self.initActions()
         self.checkActive()
+        
     
+    def DEBUGprintHeights(self):
+        print("{} - default height\n {} - combo heiht,\n {} window height, \n {} - image height\n {} - image width\n {} - window width".format(
+        self.check_versionKindle.height(), self.combo_versionKindle.height(), self.height(), self.label_image.height(), self.label_image.width(), self.width()))
+        
+    def changeSize(self):
+        
+        h = self.label_image.height() + 100
+        w = self.label_image.width() + 120
+        #self.resize(h,w)
+        self.setFixedHeight(h)
+        self.setFixedWidth(w)
+        
     def initVariables(self):
         
         self.delta_left = None
@@ -132,14 +145,11 @@ class CropDialog(QtGui.QDialog):
         
         app = QtGui.QApplication.instance()
         self.language_translator = QtCore.QTranslator()
-        print(self.language)
         if "en" in self.language:
-            print("English chosen")
             pass
         else:
-            print("Russian chosen")
             path = self.language + ".qm"
-            print(self.language_translator.load(path))
+            self.language_translator.load(path)
         app.installTranslator(self.language_translator)
         self.retranslateUI()
         
@@ -159,6 +169,7 @@ class CropDialog(QtGui.QDialog):
         self.im.paste(self.clear_im)
         self.blackImage(True)
         self.putImage()
+        self.changeSize()
         self.checkActive()
         
     def pasteImage(self):
@@ -233,7 +244,6 @@ class CropDialog(QtGui.QDialog):
         
         width = self.im.size[0]
         height = self.im.size[1]
-        print(width - self.delta_right, " crop")
         self.im = self.im.crop((floor(self.delta_left), 0,floor(self.delta_left) + self.width_need,height))
         self.putImage()
         self.checkActive()
@@ -243,7 +253,7 @@ class CropDialog(QtGui.QDialog):
         width,height = self.clear_im.size
         for i in range(width):
             for j in range(height):
-                print("Still here")
+                print("Detect grayscale")
                 r,g,b = self.clear_im.getpixel((i,j))
                 if r!= g != b: self.clear_im = self.clear_im.convert("LA"); self.clear_im = self.clear_im.convert("RGBA"); return
     
@@ -693,8 +703,6 @@ class Window(QtGui.QMainWindow):
             self.label = Image.open(LABEL_1024).convert("RGBA")
         else:
             self.label = Image.open(LABEL_800).convert("RGBA")
-            
-        print(self.label.mode)
         
         self.check_slide.setEnabled(True)
         self.check_slide.setChecked(True)
@@ -720,8 +728,6 @@ class Window(QtGui.QMainWindow):
         
         self.im = Image.new(size=self.clear_im.size, mode=self.clear_im.mode)
         self.im.paste(self.clear_im)
-        print(self.im.mode, "im mode")
-        print(self.clear_im.mode, " clear_im mode")
         
     def saveImage(self):
         
@@ -795,10 +801,8 @@ class Window(QtGui.QMainWindow):
             self.language = self.sender().objectName()
         
         if "en" in self.language:
-            print("English")
             pass
         else:
-            print("Rus or Ukr")
             path = self.language + ".qm"
             self.language_translator.load(path)
         app.installTranslator(self.language_translator)
@@ -821,7 +825,6 @@ class Window(QtGui.QMainWindow):
             self.language = "en"
         if not self.version:
             self.version = 0
-        print(type(self.version), " type self version")
         self.translateUI(no_sent=True)
     
     def closeEvent(self, event):
