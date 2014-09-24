@@ -667,6 +667,7 @@ class Window(QtGui.QMainWindow):
         #filedialog.setLabelText(filedialog.Accept, self.tr('Open'))
         #filedialog.setLabelText(filedialog.Reject, self.tr('Cancel'))
         #self.file_path = filedialog.getOpenFileName(self, self.tr('Open file'), '/home')
+        self.setEnabled(False)
         self.file_path = QtGui.QFileDialog.getOpenFileName(self, self.tr('Open file'), '/home')
         
         if self.file_path == '':
@@ -675,11 +676,13 @@ class Window(QtGui.QMainWindow):
             self.statusBar.showMessage(self.tr('No image'))
             return
         
+        
         #place for dialog crop
-        print(self.language, " current language")
-        print(type(self.version), " type self version")
-        ui = CropDialog(self.file_path, lang = self.language, version = self.version)      
+        
+        ui = CropDialog(self.file_path, lang = self.language, version = self.version)
+        self.setEnabled(False)      
         ui.exec_()
+        self.setEnabled(True)
         try:
             self.clear_im = Image.new(size=ui.im.size, mode=ui.im.mode)
             self.clear_im.paste(ui.im)
@@ -826,7 +829,8 @@ class Window(QtGui.QMainWindow):
         if not self.version:
             self.version = 0
         self.translateUI(no_sent=True)
-    
+        
+        
     def closeEvent(self, event):
         
         self.saveUI()
@@ -838,7 +842,8 @@ def main():
     sys.exit(app.exec_())
     
 def test():
-    r = None
+    app = QtGui.QApplication(sys.argv)
+    r = QtGui.QDesktopWidget().availableGeometry()
     print(r)
 if __name__ == '__main__':
     main()
