@@ -4,7 +4,7 @@
 #--------------------LICENSE STUFF
 #
 from PyQt4 import QtGui, QtCore
-from PIL import Image, ImageDraw, ImageFont, ImageQt
+from PIL import Image, ImageDraw, ImageFont, ImageQt, ImageStat
 from math import floor, ceil
 import sys
 import re
@@ -42,17 +42,11 @@ class CropDialog(QtGui.QDialog):
         self.openImage()
         self.initActions()
         self.checkActive()
-        
-    
-    def DEBUGprintHeights(self):
-        print("{} - default height\n {} - combo heiht,\n {} window height, \n {} - image height\n {} - image width\n {} - window width".format(
-        self.check_versionKindle.height(), self.combo_versionKindle.height(), self.height(), self.label_image.height(), self.label_image.width(), self.width()))
-        
+            
     def changeSize(self):
         
         h = self.label_image.height() + 100
         w = self.label_image.width() + 120
-        #self.resize(h,w)
         self.setFixedHeight(h)
         self.setFixedWidth(w)
         
@@ -72,7 +66,7 @@ class CropDialog(QtGui.QDialog):
         self.label_version.setObjectName(_fromUtf8("label_version"))
         self.ButtonHorLayout.addWidget(self.label_version)
         
-        self.VerVerLayout = QtGui.QVBoxLayout(self)
+        self.VerVerLayout = QtGui.QVBoxLayout()
         self.check_versionKindle = QtGui.QCheckBox(self)
         self.combo_versionKindle = QtGui.QComboBox(self)
         self.combo_versionKindle.setMinimumSize(QtCore.QSize(0, 20))
@@ -86,7 +80,7 @@ class CropDialog(QtGui.QDialog):
         self.VerVerLayout.addWidget(self.combo_versionKindle)
         self.ButtonHorLayout.addLayout(self.VerVerLayout)
         
-        self.OkCropVerLayout = QtGui.QVBoxLayout(self)
+        self.OkCropVerLayout = QtGui.QVBoxLayout()
         self.push_crop = QtGui.QPushButton(self)
         self.push_crop.setMinimumSize(QtCore.QSize(0, 30))
         self.push_crop.setObjectName("push_crop")
@@ -250,12 +244,11 @@ class CropDialog(QtGui.QDialog):
     
     def setgrayscaleImage(self):
         
-        width,height = self.clear_im.size
-        for i in range(width):
-            for j in range(height):
-                print("Detect grayscale")
-                r,g,b = self.clear_im.getpixel((i,j))
-                if r!= g != b: self.clear_im = self.clear_im.convert("LA"); self.clear_im = self.clear_im.convert("RGBA"); return
+        stat = ImageStat.Stat(self.clear_im)
+        
+        if sum(stat.sum)/3 != stat.sum[0]:
+            self.clear_im.convert("LA")
+            self.clear_im.convert("RGBA")
     
     def closeEvent(self, event):
         print(self.sender().objectName())
