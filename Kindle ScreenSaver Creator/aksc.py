@@ -46,9 +46,10 @@ class CropDialog(QtGui.QDialog):
     def changeSize(self):
         
         h = self.label_image.height() + 100
-        w = self.label_image.width() + 120
+        w = self.label_image.width() + self.push_left.width()*2 + 30
         self.setFixedHeight(h)
         self.setFixedWidth(w)
+        self.centerUI()
         
     def initVariables(self):
         
@@ -63,7 +64,7 @@ class CropDialog(QtGui.QDialog):
         self.label_version = QtGui.QLabel(self)
         self.label_version.setMinimumSize(QtCore.QSize(0, 20))
         self.label_version.setMaximumSize(QtCore.QSize(16777215, 20))
-        self.label_version.setObjectName(_fromUtf8("label_version"))
+        self.label_version.setObjectName("label_version")
         self.ButtonHorLayout.addWidget(self.label_version)
         
         self.VerVerLayout = QtGui.QVBoxLayout()
@@ -96,13 +97,11 @@ class CropDialog(QtGui.QDialog):
         self.ImHorLayout = QtGui.QHBoxLayout()
         self.ImHorLayout.setObjectName(_fromUtf8("ImHorLayout"))
         self.push_left = QtGui.QPushButton(self)
-        self.push_left.setMinimumSize(QtCore.QSize(50, 400))
-        self.push_left.setMaximumSize(QtCore.QSize(50, 400))
+        self.push_left.setFixedSize(QtCore.QSize(50, 400))
         self.push_left.setObjectName("push_left")
         self.ImHorLayout.addWidget(self.push_left)
         self.label_image = QtGui.QLabel(self)
-        self.label_image.setMinimumSize(QtCore.QSize(300, 400))
-        self.label_image.setMaximumSize(QtCore.QSize(300, 400))
+        self.label_image.setFixedSize(QtCore.QSize(300, 400))
         self.label_image.setStyleSheet(_fromUtf8("border-width: 1px;\n"
                                                  "border-style: solid"))
         self.label_image.setObjectName("label_image")
@@ -200,11 +199,9 @@ class CropDialog(QtGui.QDialog):
         
         if ratio != 1.0:
             if self.clear_im.size > (self.width_need, self.height_need):
-                #self.im = self.im.resize((width, height), Image.ANTIALIAS) #downscaling
-                self.clear_im = self.clear_im.resize((new_width, new_height), Image.ANTIALIAS)
+                self.clear_im = self.clear_im.resize((new_width, new_height), Image.ANTIALIAS)      #downscaling
             else:
-                #self.im = self.im.resize((width, height), Image.BICUBIC)   #upscaling
-                self.clear_im = self.clear_im.resize((new_width, new_height), Image.BICUBIC)
+                self.clear_im = self.clear_im.resize((new_width, new_height), Image.BICUBIC)        #upscaling
         self.clear_im = self.clear_im.convert("RGBA")
     
     def blackImage(self, default=True):
@@ -245,18 +242,15 @@ class CropDialog(QtGui.QDialog):
     def setgrayscaleImage(self):
         
         stat = ImageStat.Stat(self.clear_im)
-        
         if sum(stat.sum)/3 != stat.sum[0]:
-            self.clear_im.convert("LA")
-            self.clear_im.convert("RGBA")
+            self.clear_im = self.clear_im.convert("LA")
+            self.clear_im = self.clear_im.convert("RGBA")
     
     def closeEvent(self, event):
-        print(self.sender().objectName())
+        
         if 'ok' in self.sender().objectName():
-            print("OK clicked")
             return
         else:
-            print("X clicked")
             self.im = None
     
     def checkActive(self):
@@ -266,7 +260,7 @@ class CropDialog(QtGui.QDialog):
         self.push_ok.setEnabled(state)
         self.push_left.setEnabled(not state)
         self.push_right.setEnabled(not state)
-        #NEW
+        
         if self.version == self.combo_versionKindle.currentIndex():
             self.check_versionKindle.setEnabled(False)
         else:
@@ -275,10 +269,8 @@ class CropDialog(QtGui.QDialog):
     
     def changeVersion(self):
         
-        print("CHANGE VERSIOn")
         self.version = self.combo_versionKindle.currentIndex()
         self.checkActive()
-        #NEW
     
     def initActions(self):
         
@@ -287,7 +279,7 @@ class CropDialog(QtGui.QDialog):
         self.push_crop.clicked.connect(self.cropImage)
         self.combo_versionKindle.currentIndexChanged.connect(self.openImage)
         self.push_ok.clicked.connect(self.close)
-        self.check_versionKindle.stateChanged.connect(self.changeVersion) #NEW
+        self.check_versionKindle.stateChanged.connect(self.changeVersion)
     
 class Window(QtGui.QMainWindow):
     
@@ -312,7 +304,6 @@ class Window(QtGui.QMainWindow):
         
         self.im = None
         self.clear_im = None
-        #self.label = Image.open(LABEL).convert("RGBA")
         self.label = None
         self.file_path = None
 
@@ -504,7 +495,7 @@ class Window(QtGui.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def retranslateUI(self):
-        self.setWindowTitle("Kindle ScreenSaver Creator")
+        self.setWindowTitle("All Kindle ScreenSaver Creator")
         
         #for ico files 
         #im = QtGui.QImageReader(ICON).read()
@@ -522,16 +513,15 @@ class Window(QtGui.QMainWindow):
         self.radio_leftlower.setText(self.tr("Left Lower"))
         self.radio_rightupper.setText(self.tr("Right Upper"))
         
-        self.check_slide.setText("Slide and release the power to wake")
+        self.check_slide.setText("")
         self.button_create.setText(self.tr("Create"))
-        #self.label_image.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
-        self.button_up.setText("ᐃ")
+        self.button_up.setText("\N{BLACK UP-POINTING TRIANGLE}")
         self.button_up.setShortcut("Up")
-        self.button_left.setText("ᐊ")
+        self.button_left.setText("\N{BLACK LEFT-POINTING TRIANGLE}")
         self.button_left.setShortcut("Left")
-        self.button_right.setText("ᐅ")
+        self.button_right.setText("\N{BLACK RIGHT-POINTING TRIANGLE}")
         self.button_right.setShortcut("Right")
-        self.button_down.setText("ᐁ")
+        self.button_down.setText("\N{BLACK DOWN-POINTING TRIANGLE}")
         self.button_down.setShortcut("Down")
         self.menuMain.setTitle(self.tr("Main"))
         self.action_Exit.setText(self.tr("Exit"))
@@ -578,7 +568,6 @@ class Window(QtGui.QMainWindow):
         
         
         if self.is_label:
-            #self.im.paste(self.label, (0, self.im.size[1] - self.label.size[1]), mask= self.label)
             if self.im.size != self.label.size:
                 self.label = self.label.resize(self.im.size)
             self.im.paste(self.label, mask = self.label)
@@ -626,7 +615,6 @@ class Window(QtGui.QMainWindow):
         
         font = font
         size_x = self.im.size[0] - 10
-        #size_y = self.im.size[1] - 10 - self.label.size[1]
         size_y = self.im.size[1] - 10 - 60
         text_height = 0
         text_lenght = 0
@@ -662,13 +650,12 @@ class Window(QtGui.QMainWindow):
         #self.file_path = filedialog.getOpenFileName(self, self.tr('Open file'), '/home')
         self.setEnabled(False)
         self.file_path = QtGui.QFileDialog.getOpenFileName(self, self.tr('Open file'), '/home')
-        
+        self.setEnabled(True)
         if self.file_path == '':
             return
         if path.split(self.file_path)[-1].split('.')[1].lower() not in IMAGE_FORMATS:
             self.statusBar.showMessage(self.tr('No image'))
             return
-        
         
         #place for dialog crop
         
@@ -681,7 +668,6 @@ class Window(QtGui.QMainWindow):
             self.clear_im.paste(ui.im)
             self.version = ui.version
         except:
-            print("Got exception")
             return
         
         #end of place for dialog crop
@@ -700,6 +686,10 @@ class Window(QtGui.QMainWindow):
         else:
             self.label = Image.open(LABEL_800).convert("RGBA")
         
+        if "Kindle 3" in kindle_version or "Kindle DX" in kindle_version:
+            self.check_slide.setText("Slide and release the power to wake")
+        else:
+            self.check_slide.setText("Press the power switch to wake")
         self.check_slide.setEnabled(True)
         self.check_slide.setChecked(True)
         
@@ -716,6 +706,7 @@ class Window(QtGui.QMainWindow):
         self.text_x = 10
         self.text_y = 10
         self.redraw()
+        self.centerUI()
         
         self.open_path.setText(self.file_path)
         self.statusBar.showMessage(self.tr("Opened file"))
