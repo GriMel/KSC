@@ -296,8 +296,9 @@ class Window(QtGui.QMainWindow):
     def initVariables(self):
         
         self.language_translator = QtCore.QTranslator()
-        self.text_x = 10
-        self.text_y = 10
+        self.text_frame = 20
+        self.text_x = self.text_frame
+        self.text_y = self.text_frame
         self.text_color = None
         self.is_label = True
         self.is_text = False
@@ -451,18 +452,22 @@ class Window(QtGui.QMainWindow):
         #------------------------------------------
         self.grid_arrows = QtGui.QGridLayout()
         self.button_up = QtGui.QPushButton(self.centralWidget)
+        self.button_up.setObjectName("button_up")
         self.button_up.setMinimumSize(QtCore.QSize(35, 35))
         self.button_up.setMaximumSize(QtCore.QSize(35, 35))
         self.grid_arrows.addWidget(self.button_up, 0, 1, 1, 1, QtCore.Qt.AlignBottom)
         self.button_left = QtGui.QPushButton(self.centralWidget)
+        self.button_left.setObjectName("button_left")
         self.button_left.setMinimumSize(QtCore.QSize(35, 35))
         self.button_left.setMaximumSize(QtCore.QSize(35, 35))
         self.grid_arrows.addWidget(self.button_left, 1, 0, 1, 1, QtCore.Qt.AlignRight)
         self.button_right = QtGui.QPushButton(self.centralWidget)
+        self.button_right.setObjectName("button_right")
         self.button_right.setMinimumSize(QtCore.QSize(35, 35))
         self.button_right.setMaximumSize(QtCore.QSize(35, 35))
         self.grid_arrows.addWidget(self.button_right, 1, 2, 1, 1, QtCore.Qt.AlignLeft)
         self.button_down = QtGui.QPushButton(self.centralWidget)
+        self.button_down.setObjectName("button_down")
         self.button_down.setMinimumSize(QtCore.QSize(35, 35))
         self.button_down.setMaximumSize(QtCore.QSize(35, 35))
         self.grid_arrows.addWidget(self.button_down, 2, 1, 1, 1, QtCore.Qt.AlignTop)
@@ -515,13 +520,13 @@ class Window(QtGui.QMainWindow):
         
         self.check_slide.setText("")
         self.button_create.setText(self.tr("Create"))
-        self.button_up.setText("\N{BLACK UP-POINTING TRIANGLE}")
+        self.button_up.setText("\N{UPWARDS ARROW}")
         self.button_up.setShortcut("Up")
-        self.button_left.setText("\N{BLACK LEFT-POINTING TRIANGLE}")
+        self.button_left.setText("\N{LEFTWARDS ARROW}")
         self.button_left.setShortcut("Left")
-        self.button_right.setText("\N{BLACK RIGHT-POINTING TRIANGLE}")
+        self.button_right.setText("\N{RIGHTWARDS ARROW}")
         self.button_right.setShortcut("Right")
-        self.button_down.setText("\N{BLACK DOWN-POINTING TRIANGLE}")
+        self.button_down.setText("\N{DOWNWARDS ARROW}")
         self.button_down.setShortcut("Down")
         self.menuMain.setTitle(self.tr("Main"))
         self.action_Exit.setText(self.tr("Exit"))
@@ -594,18 +599,19 @@ class Window(QtGui.QMainWindow):
         self.putImage()
 
     def moveText(self):
-        default_move = {"ᐃ"  : (0, -10),
-                                                "ᐊ" : (-10, 0),
-                                                "ᐅ" : (10, 0),
-                                                "ᐁ": (0, 10)}
-        self.text_x += default_move[self.sender().text()][0]
-        self.text_y += default_move[self.sender().text()][1]
+        default_move = {"button_up"  : (0, -10),
+                        "button_left" : (-10, 0),
+                        "button_right" : (10, 0),
+                        "button_down": (0, 10)}
+        self.text_x += default_move[self.sender().objectName()][0]
+        self.text_y += default_move[self.sender().objectName()][1]
         self.redraw()
     
     def placeText(self, corner):
-        default_coord = {"left_upper" : (10, 10),
-                          "left_lower" : (10, self.im.size[1]),
-                          "right_upper" : (self.im.size[0], 10),
+        
+        default_coord = {"left_upper" : (self.text_frame, self.text_frame),
+                          "left_lower" : (self.text_frame, self.im.size[1]),
+                          "right_upper" : (self.im.size[0], self.text_frame),
                           "right_lower" : (self.im.size[0], self.im.size[1])}
         
         self.text_x, self.text_y = default_coord[self.sender().objectName()]
@@ -614,17 +620,15 @@ class Window(QtGui.QMainWindow):
     def correctText(self, font, size):
         
         font = font
-        size_x = self.im.size[0] - 10
-        size_y = self.im.size[1] - 10 - 60
+        size_x = self.im.size[0] - self.text_frame
+        size_y = self.im.size[1] - self.text_frame - 50
         text_height = 0
         text_lenght = 0
         name = self.name.text()
         surname = self.surname.text()
         
-        if self.text_x < 10:
-            self.text_x = 10
-        if self.text_y < 10:
-            self.text_y = 10
+        if self.text_x < self.text_frame: self.text_x = self.text_frame
+        if self.text_y < self.text_frame: self.text_y = self.text_frame
         
         if name and surname:
             text_height = 2*size
@@ -688,6 +692,7 @@ class Window(QtGui.QMainWindow):
         
         if "Kindle 3" in kindle_version or "Kindle DX" in kindle_version:
             self.check_slide.setText("Slide and release the power to wake")
+            self.text_x = self.text_y = self.text_frame = 10
         else:
             self.check_slide.setText("Press the power switch to wake")
         self.check_slide.setEnabled(True)
@@ -703,8 +708,8 @@ class Window(QtGui.QMainWindow):
         self.label_image.setFixedHeight(self.clear_im.size[1]/2)
         self.surnameState()
         self.button_create.setEnabled(True)
-        self.text_x = 10
-        self.text_y = 10
+        #self.text_x = 10
+        #self.text_y = 10
         self.redraw()
         self.centerUI()
         
