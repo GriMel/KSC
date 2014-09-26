@@ -202,6 +202,16 @@ class CropDialog(QtGui.QDialog):
                 self.clear_im = self.clear_im.resize((new_width, new_height), Image.ANTIALIAS)      #downscaling
             else:
                 self.clear_im = self.clear_im.resize((new_width, new_height), Image.BICUBIC)        #upscaling
+        
+        if new_width < self.width_need:
+            #resize with needed width and crop upper and lower line
+            ratio = self.width_need/new_width
+            new_width = self.width_need
+            new_height = ceil(ratio*new_height)
+            delta = (new_height-self.height_need)/2
+            self.clear_im = self.clear_im.resize((new_width, new_height))
+            self.clear_im = self.clear_im.crop((0, ceil(delta), new_width, ceil(delta) + self.height_need))
+            
         self.clear_im = self.clear_im.convert("RGBA")
     
     def blackImage(self, default=True):
@@ -235,7 +245,7 @@ class CropDialog(QtGui.QDialog):
         
         width = self.im.size[0]
         height = self.im.size[1]
-        self.im = self.im.crop((floor(self.delta_left), 0,floor(self.delta_left) + self.width_need,height))
+        self.im = self.im.crop((floor(self.delta_left), 0, floor(self.delta_left) + self.width_need,height))
         self.putImage()
         self.checkActive()
     
@@ -255,7 +265,7 @@ class CropDialog(QtGui.QDialog):
     
     def checkActive(self):
         
-        state = self.im.size[0] <= self.width_need
+        state = self.im.size[0] == self.width_need
         self.push_crop.setEnabled(not state)
         self.push_ok.setEnabled(state)
         self.push_left.setEnabled(not state)
@@ -481,8 +491,6 @@ class Window(QtGui.QMainWindow):
         self.setMenuBar(self.menuBar)
         self.statusBar = QtGui.QStatusBar(self)
         self.setStatusBar(self.statusBar)
-        self.action_Exit = QtGui.QAction(self)
-        self.menuMain.addAction(self.action_Exit)
         self.menuLanguage = QtGui.QMenu(self.menuMain)
         self.actionEnglish = QtGui.QAction(self)
         self.actionEnglish.setObjectName("en")
@@ -494,6 +502,8 @@ class Window(QtGui.QMainWindow):
         self.menuLanguage.addAction(self.actionRussian)
         self.menuLanguage.addAction(self.actionUkrainian)
         self.menuMain.addAction(self.menuLanguage.menuAction())
+        self.action_Exit = QtGui.QAction(self)
+        self.menuMain.addAction(self.action_Exit)
         self.menuBar.addAction(self.menuMain.menuAction())
         
         self.centerUI()
@@ -573,8 +583,6 @@ class Window(QtGui.QMainWindow):
         
         
         if self.is_label:
-            if self.im.size != self.label.size:
-                self.label = self.label.resize(self.im.size)
             self.im.paste(self.label, mask = self.label)
             
         
@@ -829,11 +837,6 @@ def main():
     w = Window()
     w.show()
     sys.exit(app.exec_())
-    
-def test():
-    app = QtGui.QApplication(sys.argv)
-    r = QtGui.QDesktopWidget().availableGeometry()
-    print(r)
+
 if __name__ == '__main__':
     main()
-    #test()
