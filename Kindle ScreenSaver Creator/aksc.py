@@ -61,13 +61,15 @@ class CropDialog(QtGui.QDialog):
                 
     def initUI(self):
         
-        self.resize(550, 500)
+        #self.resize(550, 500)
         self.MainLayout = QtGui.QVBoxLayout(self)
         self.ButtonHorLayout = QtGui.QHBoxLayout()
         self.label_version = QtGui.QLabel(self)
         self.label_version.setObjectName("label_version")
         
         self.LabelVerLayout = QtGui.QVBoxLayout()
+        spacerItem = QtGui.QSpacerItem(20, 40)
+        self.LabelVerLayout.addItem(spacerItem)
         self.LabelVerLayout.addWidget(self.label_version)
         self.ButtonHorLayout.addLayout(self.LabelVerLayout)
         
@@ -119,10 +121,6 @@ class CropDialog(QtGui.QDialog):
     
     def setSizeUI(self):
         
-        '''
-        self.label_version.setMinimumSize(QtCore.QSize(0, 20))
-        self.label_version.setMaximumSize(QtCore.QSize(16777215, 20))
-        '''
         h = 25
         lab_w = self.fontMetrics().boundingRect(self.label_version.text()).width() + 7
         self.label_version.setFixedSize(QtCore.QSize(lab_w, h))
@@ -133,9 +131,9 @@ class CropDialog(QtGui.QDialog):
         self.push_crop.setFixedSize(QtCore.QSize(100, h))
         self.push_ok.setFixedSize(QtCore.QSize(100, h))
         self.push_left.setFixedSize(QtCore.QSize(50, 400))
+        self.push_right.setFixedSize(QtCore.QSize(50, 400))
         self.label_image.setFixedSize(QtCore.QSize(300, 400))
-        self.push_right.setMinimumSize(QtCore.QSize(50, 400))
-        self.push_right.setMaximumSize(QtCore.QSize(50, 400))
+        
     
     def retranslateUI(self):
         
@@ -153,15 +151,7 @@ class CropDialog(QtGui.QDialog):
         self.push_left.setText("<")
         self.push_right.setText(">")
         
-        self.setSizeUI()
-        
-        #lab_w = self.label_version.fontMetrics().boundingRect(self.label_version.text()).width()
-        #lab_h = self.label_version.fontMetrics().boundingRect(self.label_version.text()).height()
-        #self.label_version.setFixedSize(QtCore.QSize(lab_w, lab_h))
-        #combo_h = self.combo_versionKindle.fontMetrics().boundingRect(self.combo_versionKindle.itemText(0).height())
-        #combo_w = self.combo_versionKindle.fontMetrics().boundingRect(self.combo_versionKindle.itemText(0).width())
-        #self.combo_versionKindle.setFixedSize(QtCore.QSize(combo_w, combo_h))
-        
+        self.setSizeUI()        
         
     def translateUI(self):
         
@@ -200,17 +190,21 @@ class CropDialog(QtGui.QDialog):
         self.im.paste(self.clear_im)
         self.blackImage(False)
         self.putImage()
+        self.changeSize()
         self.checkActive()
         
     def putImage(self):
-        cp = QtGui.QDesktopWidget().availableGeometry().width()
         
+        screen_width = QtGui.QDesktopWidget().availableGeometry().width()
+        print(self.screen_coeff)
         height = self.im.size[1]/self.screen_coeff
         width = self.im.size[0]/self.screen_coeff
-        if cp < width + self.push_left.width()*2:
-            self.screen_coeff = 4
+        while screen_width < width + self.push_left.width()*2:            
+            self.screen_coeff = self.screen_coeff*2
             height = height/2
             width = width/2
+            screen_width = QtGui.QDesktopWidget().availableGeometry().width()
+            
         self.label_image.setFixedHeight(height)
         self.label_image.setFixedWidth(width)
         self.push_left.setFixedHeight(height)
@@ -278,7 +272,8 @@ class CropDialog(QtGui.QDialog):
     def cropImage(self):
         
         height = self.clear_im.size[1]
-        self.clear_im = self.clear_im.crop((floor(self.delta_left), 0, floor(self.delta_left) + self.width_need,height))
+        self.clear_im = self.clear_im.crop((floor(self.delta_left), 0, floor(self.delta_left) + self.width_need, height))
+        print(self.clear_im.size)
         self.pasteImage()
     
     def setgrayscaleImage(self):
