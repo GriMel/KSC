@@ -57,6 +57,7 @@ class CropDialog(QtGui.QDialog):
         
         self.delta_left = None
         self.delta_right = None
+        self.screen_coeff = 2
                 
     def initUI(self):
         
@@ -123,15 +124,15 @@ class CropDialog(QtGui.QDialog):
         self.label_version.setMaximumSize(QtCore.QSize(16777215, 20))
         '''
         h = 25
-        self.label_version.setFixedSize(QtCore.QSize(200, h))
+        lab_w = self.fontMetrics().boundingRect(self.label_version.text()).width() + 7
+        self.label_version.setFixedSize(QtCore.QSize(lab_w, h))
         
-        self.combo_versionKindle.setMinimumSize(QtCore.QSize(0, 20))
-        self.combo_versionKindle.setFixedSize(QtCore.QSize(250, h))
+        combo_w = self.fontMetrics().boundingRect(self.combo_versionKindle.itemText(4)).width() + 7
+        self.combo_versionKindle.setFixedSize(QtCore.QSize(combo_w, h))
         
         self.push_crop.setFixedSize(QtCore.QSize(100, h))
         self.push_ok.setFixedSize(QtCore.QSize(100, h))
         self.push_left.setFixedSize(QtCore.QSize(50, 400))
-        
         self.label_image.setFixedSize(QtCore.QSize(300, 400))
         self.push_right.setMinimumSize(QtCore.QSize(50, 400))
         self.push_right.setMaximumSize(QtCore.QSize(50, 400))
@@ -202,9 +203,14 @@ class CropDialog(QtGui.QDialog):
         self.checkActive()
         
     def putImage(self):
+        cp = QtGui.QDesktopWidget().availableGeometry().width()
         
-        height = self.im.size[1]/2
-        width = self.im.size[0]/2
+        height = self.im.size[1]/self.screen_coeff
+        width = self.im.size[0]/self.screen_coeff
+        if cp < width + self.push_left.width()*2:
+            self.screen_coeff = 4
+            height = height/2
+            width = width/2
         self.label_image.setFixedHeight(height)
         self.label_image.setFixedWidth(width)
         self.push_left.setFixedHeight(height)
@@ -271,11 +277,9 @@ class CropDialog(QtGui.QDialog):
         
     def cropImage(self):
         
-        width = self.im.size[0]
-        height = self.im.size[1]
-        self.im = self.im.crop((floor(self.delta_left), 0, floor(self.delta_left) + self.width_need,height))
-        self.putImage()
-        self.checkActive()
+        height = self.clear_im.size[1]
+        self.clear_im = self.clear_im.crop((floor(self.delta_left), 0, floor(self.delta_left) + self.width_need,height))
+        self.pasteImage()
     
     def setgrayscaleImage(self):
         
