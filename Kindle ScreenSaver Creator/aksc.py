@@ -46,7 +46,9 @@ class CropDialog(QtGui.QDialog):
     def changeSize(self):
         
         h = self.label_image.height() + 100
-        w = self.label_image.width() + self.push_left.width()*2 + 30
+        w = self.label_image.width() + self.push_left.width()*2 + 70
+        min_w = self.label_version.width() + self.combo_versionKindle.width() + self.push_crop.width() + 50
+        if w < min_w: w = min_w
         self.setFixedHeight(h)
         self.setFixedWidth(w)
         self.centerUI()
@@ -62,15 +64,15 @@ class CropDialog(QtGui.QDialog):
         self.MainLayout = QtGui.QVBoxLayout(self)
         self.ButtonHorLayout = QtGui.QHBoxLayout()
         self.label_version = QtGui.QLabel(self)
-        self.label_version.setMinimumSize(QtCore.QSize(0, 20))
-        self.label_version.setMaximumSize(QtCore.QSize(16777215, 20))
         self.label_version.setObjectName("label_version")
-        self.ButtonHorLayout.addWidget(self.label_version)
+        
+        self.LabelVerLayout = QtGui.QVBoxLayout()
+        self.LabelVerLayout.addWidget(self.label_version)
+        self.ButtonHorLayout.addLayout(self.LabelVerLayout)
         
         self.VerVerLayout = QtGui.QVBoxLayout()
         self.check_versionKindle = QtGui.QCheckBox(self)
         self.combo_versionKindle = QtGui.QComboBox(self)
-        self.combo_versionKindle.setMinimumSize(QtCore.QSize(0, 20))
         self.combo_versionKindle.setObjectName("combo_versionKindle")
         self.combo_versionKindle.addItem("")
         self.combo_versionKindle.addItem("")
@@ -83,10 +85,9 @@ class CropDialog(QtGui.QDialog):
         
         self.OkCropVerLayout = QtGui.QVBoxLayout()
         self.push_crop = QtGui.QPushButton(self)
-        self.push_crop.setMinimumSize(QtCore.QSize(0, 30))
+        
         self.push_crop.setObjectName("push_crop")
         self.push_ok = QtGui.QPushButton(self)
-        self.push_ok.setMinimumSize(QtCore.QSize(0, 30))
         self.push_ok.setObjectName("push_ok")
         self.push_ok.setEnabled(False)
         self.OkCropVerLayout.addWidget(self.push_crop)
@@ -97,18 +98,15 @@ class CropDialog(QtGui.QDialog):
         self.ImHorLayout = QtGui.QHBoxLayout()
         self.ImHorLayout.setObjectName(_fromUtf8("ImHorLayout"))
         self.push_left = QtGui.QPushButton(self)
-        self.push_left.setFixedSize(QtCore.QSize(50, 400))
+        
         self.push_left.setObjectName("push_left")
         self.ImHorLayout.addWidget(self.push_left)
         self.label_image = QtGui.QLabel(self)
-        self.label_image.setFixedSize(QtCore.QSize(300, 400))
         self.label_image.setStyleSheet(_fromUtf8("border-width: 1px;\n"
                                                  "border-style: solid"))
         self.label_image.setObjectName("label_image")
         self.ImHorLayout.addWidget(self.label_image)
         self.push_right = QtGui.QPushButton(self)
-        self.push_right.setMinimumSize(QtCore.QSize(50, 400))
-        self.push_right.setMaximumSize(QtCore.QSize(50, 400))
         self.push_right.setObjectName("push_right")
         self.ImHorLayout.addWidget(self.push_right)
         self.MainLayout.addLayout(self.ImHorLayout)
@@ -116,7 +114,28 @@ class CropDialog(QtGui.QDialog):
         self.retranslateUI()
         self.centerUI()
         QtCore.QMetaObject.connectSlotsByName(self)
-
+    
+    
+    def setSizeUI(self):
+        
+        '''
+        self.label_version.setMinimumSize(QtCore.QSize(0, 20))
+        self.label_version.setMaximumSize(QtCore.QSize(16777215, 20))
+        '''
+        h = 25
+        self.label_version.setFixedSize(QtCore.QSize(200, h))
+        
+        self.combo_versionKindle.setMinimumSize(QtCore.QSize(0, 20))
+        self.combo_versionKindle.setFixedSize(QtCore.QSize(250, h))
+        
+        self.push_crop.setFixedSize(QtCore.QSize(100, h))
+        self.push_ok.setFixedSize(QtCore.QSize(100, h))
+        self.push_left.setFixedSize(QtCore.QSize(50, 400))
+        
+        self.label_image.setFixedSize(QtCore.QSize(300, 400))
+        self.push_right.setMinimumSize(QtCore.QSize(50, 400))
+        self.push_right.setMaximumSize(QtCore.QSize(50, 400))
+    
     def retranslateUI(self):
         
         self.setWindowTitle(self.tr("Crop Image"))
@@ -131,8 +150,17 @@ class CropDialog(QtGui.QDialog):
         self.push_crop.setText(self.tr("Crop"))
         self.push_ok.setText(self.tr("OK"))
         self.push_left.setText("<")
-        self.label_image.setText("<html><head/><body><p align=\"center\"><br/></p></body></html>")
         self.push_right.setText(">")
+        
+        self.setSizeUI()
+        
+        #lab_w = self.label_version.fontMetrics().boundingRect(self.label_version.text()).width()
+        #lab_h = self.label_version.fontMetrics().boundingRect(self.label_version.text()).height()
+        #self.label_version.setFixedSize(QtCore.QSize(lab_w, lab_h))
+        #combo_h = self.combo_versionKindle.fontMetrics().boundingRect(self.combo_versionKindle.itemText(0).height())
+        #combo_w = self.combo_versionKindle.fontMetrics().boundingRect(self.combo_versionKindle.itemText(0).width())
+        #self.combo_versionKindle.setFixedSize(QtCore.QSize(combo_w, combo_h))
+        
         
     def translateUI(self):
         
@@ -481,7 +509,7 @@ class Window(QtGui.QMainWindow):
         self.button_down.setMinimumSize(QtCore.QSize(35, 35))
         self.button_down.setMaximumSize(QtCore.QSize(35, 35))
         self.grid_arrows.addWidget(self.button_down, 2, 1, 1, 1, QtCore.Qt.AlignTop)
-        self.RightVertLayout.addLayout(self.grid_arrows)
+        self.RightVertLayout.addLayout(self.grid_arrows) 
         #------------------------------------------
         self.MainLayout.addLayout(self.RightVertLayout)
         self.setCentralWidget(self.centralWidget)
