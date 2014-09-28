@@ -196,7 +196,6 @@ class CropDialog(QtGui.QDialog):
     def putImage(self):
         
         screen_width = QtGui.QDesktopWidget().availableGeometry().width()
-        print(self.screen_coeff)
         height = self.im.size[1]/self.screen_coeff
         width = self.im.size[0]/self.screen_coeff
         while screen_width < width + self.push_left.width()*2:            
@@ -273,7 +272,6 @@ class CropDialog(QtGui.QDialog):
         
         height = self.clear_im.size[1]
         self.clear_im = self.clear_im.crop((floor(self.delta_left), 0, floor(self.delta_left) + self.width_need, height))
-        print(self.clear_im.size)
         self.pasteImage()
     
     def setgrayscaleImage(self):
@@ -458,8 +456,8 @@ class Window(QtGui.QMainWindow):
         self.check_slide = QtGui.QCheckBox(self.centralWidget)
         
         self.slide_HorLayout.addWidget(self.check_slide)
-        spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.slide_HorLayout.addItem(spacerItem3)
+        #spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        #self.slide_HorLayout.addItem(spacerItem3)
         self.LeftVertLayout.addLayout(self.slide_HorLayout)
         #------------------------------------------
         self.button_create = QtGui.QPushButton(self.centralWidget)
