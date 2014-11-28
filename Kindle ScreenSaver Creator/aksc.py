@@ -29,40 +29,62 @@ IMAGE_FORMATS = ['bmp', 'dcx', 'eps', 'ps', 'gif', 'im', 'jpg', 'jpeg',
                  'jpe', 'pcd', 'pcx', 'pdf', 'png', 'pbm', 'pgm', 'ppm',
                  'psd', 'tif', 'tiff', 'xmb', 'xpm']
 
+#EXPERIMENTAL FEATURES
+#Selector and SpecialLabel
+'''
+class Selector (QtGui.QRubberBand):
+    
+    def __init__(self, *arg, **kwargs):
+        super(Selector, self).__init__(*arg, **kwargs)
+        
+    def paintEvent(self, event):
+        
+        #set pen
+        painter = QtGui.QPainter(self)
+        painter.setPen(QtGui.QPen(QtCore.Qt.black, 4))
+        
+        #set brush
+        color = QtGui.QColor(QtCore.Qt.blue)
+        painter.setBrush(QtGui.QBrush(color))
+        painter.setOpacity(0.3)
+        #painter.fillRect(event.rect(), QtGui.QBrush(color))
+        
+        #draw rect
+        painter.drawRect(event.rect())
+        
 class SpecialLabel(QtGui.QLabel):
     
     def __init__(self, parent):
-        #super(SpecialLabel, self).__init__()
-        QtGui.QLabel.__init__(self, parent)
-        self.rubberBand = QtGui.QRubberBand(QtGui.QRubberBand.Rectangle, self)
+        super(SpecialLabel, self).__init__()
+        #QtGui.QLabel.__init__(self, parent)
+        self.rubberBand = Selector(Selector.Rectangle, self)
         self.origin = QtCore.QPoint()
+        self.im_width = 0
+        self.im_height = 0
         
     def mousePressEvent(self, event):
-        print("clicked")
         self.origin = QtCore.QPoint(event.pos())
         self.rubberBand.setGeometry(QtCore.QRect(self.origin, QtCore.QSize()))
         self.rubberBand.show()
         
     def mouseMoveEvent(self, event):
-        print("moving")
         x = event.pos().x()
         y = event.pos().y()
-        #ratio = 2
+        
         min_x = self.origin.x()+20
         min_y = self.origin.y()+20
-        #y = x*ratio
-        '''
-        if x < 0: x = 0
-        if y < 0: y = 0
+        
         if x > self.width() : x = self.width() -1
         if y > self.height() : y = self.height() -1
-        if x < min_x: x = min_x
-        if y < min_y: y = min_y
-        '''
+        print(self.width(), self.height())
+        if x < min_x : x = min_x
+        if y < min_y : y = min_y
+        #print(x,y)
         pos = QtCore.QPoint(x,y)
         if not self.origin.isNull():
             self.rubberBand.setGeometry(QtCore.QRect(self.origin, pos).normalized())
-            
+'''
+
 class CropDialog(QtGui.QDialog):
     
     def __init__(self, im_path, lang, version=1):
@@ -95,7 +117,6 @@ class CropDialog(QtGui.QDialog):
                 
     def initUI(self):
         
-        #self.resize(550, 500)
         self.MainLayout = QtGui.QVBoxLayout(self)
         self.ButtonHorLayout = QtGui.QHBoxLayout()
         self.label_version = QtGui.QLabel(self)
@@ -138,8 +159,8 @@ class CropDialog(QtGui.QDialog):
         
         self.push_left.setObjectName("push_left")
         self.ImHorLayout.addWidget(self.push_left)
-        #self.label_image = QtGui.QLabel(self)
-        self.label_image = SpecialLabel(self)
+        self.label_image = QtGui.QLabel(self)
+        #self.label_image = SpecialLabel(self)    #EXPERIMENTAL
         self.label_image.setStyleSheet(_fromUtf8("border-width: 1px;\n"
                                                  "border-style: solid"))
         self.label_image.setObjectName("label_image")
