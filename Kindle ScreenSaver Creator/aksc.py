@@ -87,12 +87,13 @@ class SpecialLabel(QtGui.QLabel):
 
 class CropDialog(QtGui.QDialog):
     
-    def __init__(self, im_path, lang, version=1):
+    def __init__(self, image_path, language, version=0):
         super(CropDialog, self).__init__()
-        self.language = lang
+        
+        self.language = language
         self.version = version
         self.initUI()
-        self.im_path = im_path
+        self.im_path = image_path
         self.initVariables()
         self.translateUI()
         self.openImage()
@@ -101,7 +102,7 @@ class CropDialog(QtGui.QDialog):
             
     def changeSize(self):
         
-        h = self.label_image.height() + 100
+        h = self.label_image.height() + 100                                                                     
         w = self.label_image.width() + self.push_left.width()*2 + 70
         min_w = self.label_version.width() + self.combo_versionKindle.width() + self.push_crop.width() + 50
         if w < min_w: w = min_w
@@ -409,7 +410,7 @@ class Window(QtGui.QMainWindow):
         self.open_HorLayout = QtGui.QHBoxLayout()
         
         self.open_path = QtGui.QLineEdit(self.centralWidget)
-        self.open_path.setReadOnly(True)
+        self.open_path.setReadOnly(True)                                            #field for open path is not editable
         self.button_open = QtGui.QPushButton(self.centralWidget)
         
         self.open_HorLayout.addWidget(self.open_path)
@@ -576,7 +577,6 @@ class Window(QtGui.QMainWindow):
         self.radio_Black.setMinimumSize(QtCore.QSize(0, 20))
         self.label_textcolor.setMinimumSize(QtCore.QSize(0, 20))
         self.label_wherePlace.setMinimumSize(QtCore.QSize(0, 20))
-        self.label_wherePlace.setMaximumSize(QtCore.QSize(16777215, 20))
         self.radio_leftupper.setMinimumSize(QtCore.QSize(0, 20))
         self.radio_leftlower.setMinimumSize(QtCore.QSize(0, 20))
         self.radio_rightupper.setMinimumSize(QtCore.QSize(0, 20))
@@ -584,6 +584,7 @@ class Window(QtGui.QMainWindow):
         self.button_create.setMinimumSize(QtCore.QSize(0, 20))
         self.label_image.setMinimumSize(QtCore.QSize(300, 400))
         self.label_image.setMaximumSize(QtCore.QSize(300, 400))
+        
         self.button_up.setMinimumSize(QtCore.QSize(35, 35))
         self.button_up.setMaximumSize(QtCore.QSize(35, 35))
         self.button_left.setMinimumSize(QtCore.QSize(35, 35))
@@ -592,7 +593,8 @@ class Window(QtGui.QMainWindow):
         self.button_right.setMaximumSize(QtCore.QSize(35, 35))
         self.button_down.setMinimumSize(QtCore.QSize(35, 35))
         self.button_down.setMaximumSize(QtCore.QSize(35, 35))
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 648, 20))
+        
+        #self.menuBar.setGeometry(QtCore.QRect(0, 0, 648, 20))
         
     def retranslateUI(self):
         self.setWindowTitle("All Kindle ScreenSaver Creator")
@@ -640,7 +642,7 @@ class Window(QtGui.QMainWindow):
         self.move(qr.topLeft())
         
     def initStateUI(self):
-                      
+        
         self.name.setEnabled(False)
         self.surname.setEnabled(False)
         self.radio_leftlower.setEnabled(False)
@@ -655,23 +657,40 @@ class Window(QtGui.QMainWindow):
         self.button_up.setEnabled(False)
         self.button_down.setEnabled(False)
         self.button_create.setEnabled(False)
+    
+    def surnameState(self):
         
+        enabled = bool(self.name.text())
+        self.surname.setEnabled(enabled)
+        self.radio_leftlower.setEnabled(enabled)
+        self.radio_leftupper.setEnabled(enabled)
+        self.radio_rightlower.setEnabled(enabled)
+        self.radio_rightupper.setEnabled(enabled)
+        self.radio_Black.setEnabled(enabled)
+        self.radio_White.setEnabled(enabled)
+        self.button_left.setEnabled(enabled)
+        self.button_right.setEnabled(enabled)
+        self.button_up.setEnabled(enabled)
+        self.button_down.setEnabled(enabled)
+        self.label_textcolor.setEnabled(enabled)
+        self.label_wherePlace.setEnabled(enabled)
+        if not enabled:
+            self.surname.setText("")
+            
     def putImage(self):
         
         pixmap = QtGui.QPixmap.fromImage(ImageQt.ImageQt(self.im))
         pixmap = pixmap.scaled(self.label_image.size())
         self.label_image.setPixmap(pixmap)
     
-    def redraw(self):
+    def redrawImage(self):
         
         self.is_label = self.check_slide.isChecked()
         self.is_text = self.name.text() or self.surname.text()
         self.pasteImage()
-        
-        
+                
         if self.is_label:
-            self.im.paste(self.label, mask = self.label)
-            
+            self.im.paste(self.label, mask = self.label) 
         
         if self.is_text:
             size = FONT_SIZE
@@ -700,7 +719,7 @@ class Window(QtGui.QMainWindow):
                         "button_down": (0, 10)}
         self.text_x += default_move[self.sender().objectName()][0]
         self.text_y += default_move[self.sender().objectName()][1]
-        self.redraw()
+        self.redrawImage()
     
     def placeText(self, corner):
         
@@ -710,7 +729,7 @@ class Window(QtGui.QMainWindow):
                           "right_lower" : (self.im.size[0], self.im.size[1])}
         
         self.text_x, self.text_y = default_coord[self.sender().objectName()]
-        self.redraw()
+        self.redrawImage()
     
     def correctText(self, font, size):
         
@@ -758,7 +777,7 @@ class Window(QtGui.QMainWindow):
         
         #place for dialog crop
         
-        ui = CropDialog(self.file_path, lang = self.language, version = self.version)
+        ui = CropDialog(self.file_path, language = self.language, version = self.version)
         self.setEnabled(False)      
         ui.exec_()
         self.setEnabled(True)
@@ -805,7 +824,7 @@ class Window(QtGui.QMainWindow):
         self.button_create.setEnabled(True)
         #self.text_x = 10
         #self.text_y = 10
-        self.redraw()
+        self.redrawImage()
         self.centerUI()
         
         self.open_path.setText(self.file_path)
@@ -820,7 +839,7 @@ class Window(QtGui.QMainWindow):
         
         default = self.tr("Sample")
         name = ""
-        self.redraw()
+        self.redrawImage()
         if self.name.text():
             name+=self.name.text()
         if self.surname.text():
@@ -837,37 +856,18 @@ class Window(QtGui.QMainWindow):
         name +=".png"
         self.im.save(path.join(SAVE_PATH, name))
         self.statusBar.showMessage(self.tr("File {} created!").format(name))
-    
-    def surnameState(self):
-        
-        enabled = bool(self.name.text())
-        self.surname.setEnabled(enabled)
-        self.radio_leftlower.setEnabled(enabled)
-        self.radio_leftupper.setEnabled(enabled)
-        self.radio_rightlower.setEnabled(enabled)
-        self.radio_rightupper.setEnabled(enabled)
-        self.radio_Black.setEnabled(enabled)
-        self.radio_White.setEnabled(enabled)
-        self.button_left.setEnabled(enabled)
-        self.button_right.setEnabled(enabled)
-        self.button_up.setEnabled(enabled)
-        self.button_down.setEnabled(enabled)
-        self.label_textcolor.setEnabled(enabled)
-        self.label_wherePlace.setEnabled(enabled)
-        if not enabled:
-            self.surname.setText("")
             
     def initActions(self):
         
         self.action_Exit.triggered.connect(self.close)
-        self.check_slide.stateChanged.connect(self.redraw)
+        self.check_slide.stateChanged.connect(self.redrawImage)
         self.button_open.clicked.connect(self.openImage)
         self.button_create.clicked.connect(self.saveImage)
-        self.name.textChanged.connect(self.redraw)
+        self.name.textChanged.connect(self.redrawImage)
         self.name.textChanged.connect(self.surnameState)
-        self.surname.textChanged.connect(self.redraw)
-        self.radio_Black.clicked.connect(self.redraw)
-        self.radio_White.clicked.connect(self.redraw)
+        self.surname.textChanged.connect(self.redrawImage)
+        self.radio_Black.clicked.connect(self.redrawImage)
+        self.radio_White.clicked.connect(self.redrawImage)
         self.radio_leftlower.clicked.connect(self.placeText)
         self.radio_leftupper.clicked.connect(self.placeText)
         self.radio_rightlower.clicked.connect(self.placeText)
@@ -902,7 +902,6 @@ class Window(QtGui.QMainWindow):
         self.settings.setValue("language", self.language)
         self.settings.setValue("version", self.version)
         
-        
     def loadUI(self):
         
         self.settings = QtCore.QSettings("src/src.ini", QtCore.QSettings.IniFormat)
@@ -913,7 +912,6 @@ class Window(QtGui.QMainWindow):
         if not self.version:
             self.version = 0
         self.translateUI(no_sent=True)
-        
         
     def closeEvent(self, event):
         
