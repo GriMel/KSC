@@ -29,6 +29,12 @@ IMAGE_FORMATS = ['bmp', 'dcx', 'eps', 'ps', 'gif', 'im', 'jpg', 'jpeg',
                  'jpe', 'pcd', 'pcx', 'pdf', 'png', 'pbm', 'pgm', 'ppm',
                  'psd', 'tif', 'tiff', 'xmb', 'xpm']
 
+KINDLE_VERSIONS = ("Kindle DX (1200 x 824)",
+                   "Kindle 3 (800 x 600)",
+                   "Kindle 4, 5, Touch (800 x 600)",
+                   "Kindle Paperwhite 1 (1024 x 758)",
+                   "Kindle Paperwhite 2 (1024 x 768)")
+
 #EXPERIMENTAL FEATURES
 #Selector and SpecialLabel
 '''
@@ -92,7 +98,7 @@ class CropDialog(QtGui.QDialog):
         
         self.language = language
         self.version = version
-        self.initUI()
+        self.initUi()
         self.im_path = image_path
         self.initVariables()
         self.translateUI()
@@ -102,7 +108,7 @@ class CropDialog(QtGui.QDialog):
             
     def changeSize(self):
         self.setFixedWidth(self.sizeHint().width())
-        self.setFixedHeight(self.sizeHint().height)
+        self.setFixedHeight(self.sizeHint().height())
         self.centerUI()
         
     def initVariables(self):
@@ -111,31 +117,28 @@ class CropDialog(QtGui.QDialog):
         self.delta_right = None
         self.screen_coeff = 2
                 
-    def initUI(self):
+    def initUi(self):
         
-        self.MainLayout = QtGui.QVBoxLayout(self)
-        self.ButtonHorLayout = QtGui.QHBoxLayout()
-        self.label_version = QtGui.QLabel(self)
-        self.label_version.setObjectName("label_version")
+        self.main_layout = QtGui.QVBoxLayout(self)
+        self.button_hor_layout = QtGui.QHBoxLayout()
+        self.choose_label = QtGui.QLabel(self)
+        self.choose_label.setObjectName("choose_label")
         
-        self.LabelVerLayout = QtGui.QVBoxLayout()
-        spacerItem = QtGui.QSpacerItem(20, 40)
-        self.LabelVerLayout.addItem(spacerItem)
-        self.LabelVerLayout.addWidget(self.label_version)
-        self.ButtonHorLayout.addLayout(self.LabelVerLayout)
+        self.choose_ver_layout = QtGui.QVBoxLayout()
+        self.choose_ver_layout.setAlignment(QtCore.Qt.AlignBottom)
+        self.choose_ver_layout.addWidget(self.choose_label)
         
-        self.VerVerLayout = QtGui.QVBoxLayout()
-        self.check_versionKindle = QtGui.QCheckBox(self)
-        self.combo_versionKindle = QtGui.QComboBox(self)
-        self.combo_versionKindle.setObjectName("combo_versionKindle")
-        self.combo_versionKindle.addItem("")
-        self.combo_versionKindle.addItem("")
-        self.combo_versionKindle.addItem("")
-        self.combo_versionKindle.addItem("")
-        self.combo_versionKindle.addItem("")
-        self.VerVerLayout.addWidget(self.check_versionKindle)
-        self.VerVerLayout.addWidget(self.combo_versionKindle)
-        self.ButtonHorLayout.addLayout(self.VerVerLayout)
+        self.button_hor_layout.addLayout(self.choose_ver_layout)
+        
+        self.version_ver_layout = QtGui.QVBoxLayout()
+        self.version_check = QtGui.QCheckBox(self)
+        self.version_combo = QtGui.QComboBox(self)
+        self.version_combo.setObjectName("version_combo")
+        for _ in KINDLE_VERSIONS:
+            self.version_combo.addItem("")
+        self.version_ver_layout.addWidget(self.version_check)
+        self.version_ver_layout.addWidget(self.version_combo)
+        self.button_hor_layout.addLayout(self.version_ver_layout)
         
         self.OkCropVerLayout = QtGui.QVBoxLayout()
         self.push_crop = QtGui.QPushButton(self)
@@ -147,8 +150,8 @@ class CropDialog(QtGui.QDialog):
         self.OkCropVerLayout.addWidget(self.push_crop)
         self.OkCropVerLayout.addWidget(self.push_ok)
         
-        self.ButtonHorLayout.addLayout(self.OkCropVerLayout)
-        self.MainLayout.addLayout(self.ButtonHorLayout)
+        self.button_hor_layout.addLayout(self.OkCropVerLayout)
+        self.main_layout.addLayout(self.button_hor_layout)
         self.ImHorLayout = QtGui.QHBoxLayout()
         self.ImHorLayout.setObjectName(_fromUtf8("ImHorLayout"))
         self.push_left = QtGui.QPushButton(self)
@@ -164,7 +167,7 @@ class CropDialog(QtGui.QDialog):
         self.push_right = QtGui.QPushButton(self)
         self.push_right.setObjectName("push_right")
         self.ImHorLayout.addWidget(self.push_right)
-        self.MainLayout.addLayout(self.ImHorLayout)
+        self.main_layout.addLayout(self.ImHorLayout)
 
         self.retranslateUI()
         self.centerUI()
@@ -174,11 +177,11 @@ class CropDialog(QtGui.QDialog):
     def setSizeUI(self):
         
         h = 25
-        lab_w = self.fontMetrics().boundingRect(self.label_version.text()).width() + 7
-        self.label_version.setFixedSize(QtCore.QSize(lab_w, h))
+        lab_w = self.fontMetrics().boundingRect(self.choose_label.text()).width() + 7
+        self.choose_label.setFixedSize(QtCore.QSize(lab_w, h))
         
-        combo_w = self.fontMetrics().boundingRect(self.combo_versionKindle.itemText(4)).width() + 7
-        self.combo_versionKindle.setFixedSize(QtCore.QSize(combo_w, h))
+        combo_w = self.fontMetrics().boundingRect(self.version_combo.itemText(4)).width() + 7
+        self.version_combo.setFixedSize(QtCore.QSize(combo_w, h))
         
         self.push_crop.setFixedSize(QtCore.QSize(100, h))
         self.push_ok.setFixedSize(QtCore.QSize(100, h))
@@ -190,14 +193,11 @@ class CropDialog(QtGui.QDialog):
     def retranslateUI(self):
         
         self.setWindowTitle(self.tr("Crop Image"))
-        self.label_version.setText(self.tr("Choose version of Kindle"))
-        self.check_versionKindle.setText(self.tr("Default"))
-        self.combo_versionKindle.setItemText(0, "Kindle DX (1200 x 824)")
-        self.combo_versionKindle.setItemText(1, "Kindle 3 (800 x 600)")
-        self.combo_versionKindle.setItemText(2, "Kindle 4, 5, Touch (800 x 600)")
-        self.combo_versionKindle.setItemText(3, "Kindle Paperwhite 1 (1024 x 758)")
-        self.combo_versionKindle.setItemText(4, "Kindle Paperwhite 2 (1024 x 768)")
-        self.combo_versionKindle.setCurrentIndex(self.version)
+        self.choose_label.setText(self.tr("Choose version of Kindle"))
+        self.version_check.setText(self.tr("Default"))
+        for index, i in enumerate(KINDLE_VERSIONS):
+            self.version_combo.setItemText(index, i)
+        self.version_combo.setCurrentIndex(self.version)
         self.push_crop.setText(self.tr("Crop"))
         self.push_ok.setText(self.tr("OK"))
         self.push_left.setText("<")
@@ -266,7 +266,7 @@ class CropDialog(QtGui.QDialog):
         self.label_image.setPixmap(pixmap)
     
     def resizeImage(self):
-        s = self.combo_versionKindle.currentText()
+        s = self.version_combo.currentText()
         pattern = re.compile(r"(\d*).x.(\d*)")
         self.height_need = int(re.search(pattern, s).group(1))
         self.width_need = int(re.search(pattern, s).group(2))
@@ -348,15 +348,15 @@ class CropDialog(QtGui.QDialog):
         self.push_left.setEnabled(not state)
         self.push_right.setEnabled(not state)
         
-        if self.version == self.combo_versionKindle.currentIndex():
-            self.check_versionKindle.setEnabled(False)
+        if self.version == self.version_combo.currentIndex():
+            self.version_check.setEnabled(False)
         else:
-            self.check_versionKindle.setEnabled(True)
-            self.check_versionKindle.setChecked(False)
+            self.version_check.setEnabled(True)
+            self.version_check.setChecked(False)
     
     def changeVersion(self):
         
-        self.version = self.combo_versionKindle.currentIndex()
+        self.version = self.version_combo.currentIndex()
         self.checkActive()
     
     def initActions(self):
@@ -364,16 +364,16 @@ class CropDialog(QtGui.QDialog):
         self.push_left.clicked.connect(self.changeBlack)
         self.push_right.clicked.connect(self.changeBlack)
         self.push_crop.clicked.connect(self.cropImage)
-        self.combo_versionKindle.currentIndexChanged.connect(self.openImage)
+        self.version_combo.currentIndexChanged.connect(self.openImage)
         self.push_ok.clicked.connect(self.close)
-        self.check_versionKindle.stateChanged.connect(self.changeVersion)
+        self.version_check.stateChanged.connect(self.changeVersion)
     
 class Window(QtGui.QMainWindow):
     
     def __init__(self):
         super(Window, self).__init__()
         self.im = ""
-        self.initUI()
+        self.initUi()
         self.retranslateUI()
         self.initStateUI()
         self.initVariables()
@@ -395,10 +395,10 @@ class Window(QtGui.QMainWindow):
         self.label = None
         self.file_path = None
 
-    def initUI(self):
+    def initUi(self):
         
         self.centralWidget = QtGui.QWidget(self)
-        self.MainLayout = QtGui.QHBoxLayout(self.centralWidget)
+        self.main_layout = QtGui.QHBoxLayout(self.centralWidget)
         #------------------------------------------
         self.LeftVertLayout = QtGui.QVBoxLayout()
         
@@ -515,7 +515,7 @@ class Window(QtGui.QMainWindow):
         self.button_create = QtGui.QPushButton(self.centralWidget)
         self.LeftVertLayout.addWidget(self.button_create)
         #------------------------------------------
-        self.MainLayout.addLayout(self.LeftVertLayout)
+        self.main_layout.addLayout(self.LeftVertLayout)
         self.RightVertLayout = QtGui.QVBoxLayout()
         
         self.label_image = QtGui.QLabel(self.centralWidget)
@@ -539,7 +539,7 @@ class Window(QtGui.QMainWindow):
         self.grid_arrows.addWidget(self.button_down, 2, 1, 1, 1, QtCore.Qt.AlignTop)
         self.RightVertLayout.addLayout(self.grid_arrows) 
         #------------------------------------------
-        self.MainLayout.addLayout(self.RightVertLayout)
+        self.main_layout.addLayout(self.RightVertLayout)
         self.setCentralWidget(self.centralWidget)
         self.menuBar = QtGui.QMenuBar(self)
         self.menuMain = QtGui.QMenu(self.menuBar)
@@ -787,7 +787,7 @@ class Window(QtGui.QMainWindow):
         if not self.name.isEnabled():
             self.name.setEnabled(True)
         
-        kindle_version = ui.combo_versionKindle.currentText()
+        kindle_version = ui.version_combo.currentText()
         if "Kindle 3" in kindle_version:
             self.label = Image.open(LABEL_3).convert("RGBA")
         elif "DX" in kindle_version:
