@@ -101,13 +101,8 @@ class CropDialog(QtGui.QDialog):
         self.checkActive()
             
     def changeSize(self):
-        
-        h = self.label_image.height() + 100                                                                     
-        w = self.label_image.width() + self.push_left.width()*2 + 70
-        min_w = self.label_version.width() + self.combo_versionKindle.width() + self.push_crop.width() + 50
-        if w < min_w: w = min_w
-        self.setFixedHeight(h)
-        self.setFixedWidth(w)
+        self.setFixedWidth(self.sizeHint().width())
+        self.setFixedHeight(self.sizeHint().height)
         self.centerUI()
         
     def initVariables(self):
