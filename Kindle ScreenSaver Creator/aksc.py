@@ -101,7 +101,6 @@ class CropDialog(QtGui.QDialog):
         self.initUi()
         self.im_path = image_path
         self.initVariables()
-        self.translateUI()
         self.openImage()
         self.initActions()
         self.checkActive()
@@ -202,20 +201,8 @@ class CropDialog(QtGui.QDialog):
         self.push_ok.setText(self.tr("OK"))
         self.push_left.setText("<")
         self.push_right.setText(">")
-        
+        print("Dow")
         self.setSizeUI()        
-        
-    def translateUI(self):
-        
-        app = QtGui.QApplication.instance()
-        self.language_translator = QtCore.QTranslator()
-        if "en" in self.language:
-            pass
-        else:
-            path = self.language + ".qm"
-            self.language_translator.load(path)
-        app.installTranslator(self.language_translator)
-        self.retranslateUI()
         
     def centerUI(self):
         
