@@ -34,7 +34,7 @@ KINDLE_VERSIONS = ("Kindle DX (1200 x 824)",
                    "Kindle 4, 5, Touch (800 x 600)",
                    "Kindle Paperwhite 1 (1024 x 758)",
                    "Kindle Paperwhite 2 (1024 x 768)")
-
+TEXT_FRAME = 20
 #EXPERIMENTAL FEATURES
 #Selector and SpecialLabel
 '''
@@ -133,40 +133,39 @@ class CropDialog(QtGui.QDialog):
         self.version_check = QtGui.QCheckBox(self)
         self.version_combo = QtGui.QComboBox(self)
         self.version_combo.setObjectName("version_combo")
-        for _ in KINDLE_VERSIONS:
-            self.version_combo.addItem("")
+        for _ in KINDLE_VERSIONS: self.version_combo.addItem("")
         self.version_ver_layout.addWidget(self.version_check)
         self.version_ver_layout.addWidget(self.version_combo)
         self.button_hor_layout.addLayout(self.version_ver_layout)
         
-        self.OkCropVerLayout = QtGui.QVBoxLayout()
-        self.push_crop = QtGui.QPushButton(self)
+        self.ok_ver_layout = QtGui.QVBoxLayout()
+        self.crop_button = QtGui.QPushButton(self)
         
-        self.push_crop.setObjectName("push_crop")
-        self.push_ok = QtGui.QPushButton(self)
-        self.push_ok.setObjectName("push_ok")
-        self.push_ok.setEnabled(False)
-        self.OkCropVerLayout.addWidget(self.push_crop)
-        self.OkCropVerLayout.addWidget(self.push_ok)
+        self.crop_button.setObjectName("crop_button")
+        self.ok_button = QtGui.QPushButton(self)
+        self.ok_button.setObjectName("ok_button")
+        self.ok_button.setEnabled(False)
+        self.ok_ver_layout.addWidget(self.crop_button)
+        self.ok_ver_layout.addWidget(self.ok_button)
         
-        self.button_hor_layout.addLayout(self.OkCropVerLayout)
+        self.button_hor_layout.addLayout(self.ok_ver_layout)
         self.main_layout.addLayout(self.button_hor_layout)
-        self.ImHorLayout = QtGui.QHBoxLayout()
-        self.ImHorLayout.setObjectName(_fromUtf8("ImHorLayout"))
-        self.push_left = QtGui.QPushButton(self)
+        self.image_hor_layout = QtGui.QHBoxLayout()
+        self.image_hor_layout.setObjectName(_fromUtf8("image_hor_layout"))
+        self.left_button = QtGui.QPushButton(self)
         
-        self.push_left.setObjectName("push_left")
-        self.ImHorLayout.addWidget(self.push_left)
-        self.label_image = QtGui.QLabel(self)
-        #self.label_image = SpecialLabel(self)    #EXPERIMENTAL
-        self.label_image.setStyleSheet(_fromUtf8("border-width: 1px;\n"
+        self.left_button.setObjectName("left_button")
+        self.image_hor_layout.addWidget(self.left_button)
+        self.image_label = QtGui.QLabel(self)
+        
+        self.image_label.setStyleSheet(_fromUtf8("border-width: 1px;\n"
                                                  "border-style: solid"))
-        self.label_image.setObjectName("label_image")
-        self.ImHorLayout.addWidget(self.label_image)
-        self.push_right = QtGui.QPushButton(self)
-        self.push_right.setObjectName("push_right")
-        self.ImHorLayout.addWidget(self.push_right)
-        self.main_layout.addLayout(self.ImHorLayout)
+        self.image_label.setObjectName("image_label")
+        self.image_hor_layout.addWidget(self.image_label)
+        self.right_button = QtGui.QPushButton(self)
+        self.right_button.setObjectName("right_button")
+        self.image_hor_layout.addWidget(self.right_button)
+        self.main_layout.addLayout(self.image_hor_layout)
 
         self.retranslateUI()
         self.centerUI()
@@ -174,7 +173,7 @@ class CropDialog(QtGui.QDialog):
     
     
     def setSizeUI(self):
-        
+        '''make cropdialog having the same size'''
         h = 25
         lab_w = self.fontMetrics().boundingRect(self.choose_label.text()).width() + 7
         self.choose_label.setFixedSize(QtCore.QSize(lab_w, h))
@@ -182,39 +181,37 @@ class CropDialog(QtGui.QDialog):
         combo_w = self.fontMetrics().boundingRect(self.version_combo.itemText(4)).width() + 7
         self.version_combo.setFixedSize(QtCore.QSize(combo_w, h))
         
-        self.push_crop.setFixedSize(QtCore.QSize(100, h))
-        self.push_ok.setFixedSize(QtCore.QSize(100, h))
-        self.push_left.setFixedSize(QtCore.QSize(50, 400))
-        self.push_right.setFixedSize(QtCore.QSize(50, 400))
-        self.label_image.setFixedSize(QtCore.QSize(300, 400))
-        
+        self.crop_button.setFixedSize(QtCore.QSize(100, h))
+        self.ok_button.setFixedSize(QtCore.QSize(100, h))
+        self.left_button.setFixedSize(QtCore.QSize(50, 400))
+        self.right_button.setFixedSize(QtCore.QSize(50, 400))
+        self.image_label.setFixedSize(QtCore.QSize(300, 400))
     
     def retranslateUI(self):
-        
+        '''filling in label/button text'''
         self.setWindowTitle(self.tr("Crop Image"))
         self.choose_label.setText(self.tr("Choose version of Kindle"))
         self.version_check.setText(self.tr("Default"))
         for index, i in enumerate(KINDLE_VERSIONS):
             self.version_combo.setItemText(index, i)
         self.version_combo.setCurrentIndex(self.version)
-        self.push_crop.setText(self.tr("Crop"))
-        self.push_ok.setText(self.tr("OK"))
-        self.push_left.setText("<")
-        self.push_right.setText(">")
-        print("Dow")
+        self.crop_button.setText(self.tr("Crop"))
+        self.ok_button.setText(self.tr("OK"))
+        self.left_button.setText("<")
+        self.right_button.setText(">")
         self.setSizeUI()        
         
     def centerUI(self):
-        
+        '''place at the center of screen'''
         qr = self.frameGeometry()
         cp = QtGui.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
     
     def openImage(self):
-        
+        '''clear image - first init and for final applying'''
         self.clear_im = Image.open(self.im_path)
-        self.setgrayscaleImage()
+        self.setGrayscaleImage()
         self.resizeImage()
         self.im = Image.new(size=self.clear_im.size, mode=self.clear_im.mode)
         self.im.paste(self.clear_im)
@@ -224,7 +221,7 @@ class CropDialog(QtGui.QDialog):
         self.checkActive()
         
     def pasteImage(self):
-        
+        '''creating copy of image for working'''
         self.im = Image.new(size=self.clear_im.size, mode=self.clear_im.mode)
         self.im.paste(self.clear_im)
         self.blackImage(False)
@@ -233,26 +230,27 @@ class CropDialog(QtGui.QDialog):
         self.checkActive()
         
     def putImage(self):
-        
+        '''put image at the label'''
         screen_width = QtGui.QDesktopWidget().availableGeometry().width()
         height = self.im.size[1]/self.screen_coeff
         width = self.im.size[0]/self.screen_coeff
-        while screen_width < width + self.push_left.width()*2:            
+        while screen_width < width + self.left_button.width()*2:            
             self.screen_coeff = self.screen_coeff*2
             height = height/2
             width = width/2
             screen_width = QtGui.QDesktopWidget().availableGeometry().width()
             
-        self.label_image.setFixedHeight(height)
-        self.label_image.setFixedWidth(width)
-        self.push_left.setFixedHeight(height)
-        self.push_right.setFixedHeight(height)
+        self.image_label.setFixedHeight(height)
+        self.image_label.setFixedWidth(width)
+        self.left_button.setFixedHeight(height)
+        self.right_button.setFixedHeight(height)
 
         pixmap = QtGui.QPixmap.fromImage(ImageQt.ImageQt(self.im))
-        pixmap = pixmap.scaled(self.label_image.size())
-        self.label_image.setPixmap(pixmap)
+        pixmap = pixmap.scaled(self.image_label.size())
+        self.image_label.setPixmap(pixmap)
     
     def resizeImage(self):
+        '''resize image after changing version'''
         s = self.version_combo.currentText()
         pattern = re.compile(r"(\d*).x.(\d*)")
         self.height_need = int(re.search(pattern, s).group(1))
@@ -281,7 +279,7 @@ class CropDialog(QtGui.QDialog):
         self.clear_im = self.clear_im.convert("RGBA")
     
     def blackImage(self, default=True):
-        
+        '''black rectangles left-right'''
         im_width = self.im.size[0]
         im_height = self.im.size[1]
         if im_width > self.width_need:
@@ -293,28 +291,29 @@ class CropDialog(QtGui.QDialog):
         else:
             return
     
-    def changeBlack(self):
-        
-        if self.sender().objectName() == "push_right":
+    def changeCropImage(self):
+        '''image change cropping area'''
+        if self.sender().objectName() == "right_button":
             self.delta_left +=10
             self.delta_right -=10
         else:
             self.delta_left -=10
             self.delta_right +=10
         
+        #bound to the edge
         if self.delta_left < 0: self.delta_left = 0; self.delta_right = self.im.size[0] - self.width_need
         if self.delta_right < 0: self.delta_right = 0; self.delta_left = self.im.size[0] - self.width_need
         
         self.pasteImage()
         
     def cropImage(self):
-        
+        '''image crop'''
         height = self.clear_im.size[1]
         self.clear_im = self.clear_im.crop((floor(self.delta_left), 0, floor(self.delta_left) + self.width_need, height))
         self.pasteImage()
     
-    def setgrayscaleImage(self):
-        
+    def setGrayscaleImage(self):
+        '''image - grayscale'''
         stat = ImageStat.Stat(self.clear_im)
         if sum(stat.sum)/3 != stat.sum[0]:
             self.clear_im = self.clear_im.convert("LA")
@@ -328,12 +327,12 @@ class CropDialog(QtGui.QDialog):
             self.im = None
     
     def checkActive(self):
-        
+        '''make some elements inactive after cropping'''
         state = self.im.size[0] == self.width_need
-        self.push_crop.setEnabled(not state)
-        self.push_ok.setEnabled(state)
-        self.push_left.setEnabled(not state)
-        self.push_right.setEnabled(not state)
+        self.crop_button.setEnabled(not state)
+        self.ok_button.setEnabled(state)
+        self.left_button.setEnabled(not state)
+        self.right_button.setEnabled(not state)
         
         if self.version == self.version_combo.currentIndex():
             self.version_check.setEnabled(False)
@@ -342,24 +341,23 @@ class CropDialog(QtGui.QDialog):
             self.version_check.setChecked(False)
     
     def changeVersion(self):
-        
+        '''version combo is triggered'''
         self.version = self.version_combo.currentIndex()
         self.checkActive()
     
     def initActions(self):
         
-        self.push_left.clicked.connect(self.changeBlack)
-        self.push_right.clicked.connect(self.changeBlack)
-        self.push_crop.clicked.connect(self.cropImage)
+        self.left_button.clicked.connect(self.changeCropImage)
+        self.right_button.clicked.connect(self.changeCropImage)
+        self.crop_button.clicked.connect(self.cropImage)
         self.version_combo.currentIndexChanged.connect(self.openImage)
-        self.push_ok.clicked.connect(self.close)
+        self.ok_button.clicked.connect(self.close)
         self.version_check.stateChanged.connect(self.changeVersion)
     
 class Window(QtGui.QMainWindow):
     
     def __init__(self):
         super(Window, self).__init__()
-        self.im = ""
         self.initUi()
         self.retranslateUI()
         self.initStateUI()
@@ -368,15 +366,14 @@ class Window(QtGui.QMainWindow):
         self.initActions()
         
     def initVariables(self):
-        
+        '''main variables'''
         self.language_translator = QtCore.QTranslator()
-        self.text_frame = 20
+        self.text_frame = TEXT_FRAME
         self.text_x = self.text_frame
         self.text_y = self.text_frame
         self.text_color = None
         self.is_label = True
         self.is_text = False
-        
         self.im = None
         self.clear_im = None
         self.label = None
@@ -384,191 +381,167 @@ class Window(QtGui.QMainWindow):
 
     def initUi(self):
         
-        self.centralWidget = QtGui.QWidget(self)
-        self.main_layout = QtGui.QHBoxLayout(self.centralWidget)
+        self.central_widget = QtGui.QWidget(self)
+        self.main_layout = QtGui.QHBoxLayout(self.central_widget)
         #------------------------------------------
-        self.LeftVertLayout = QtGui.QVBoxLayout()
+        self.left_ver_layout = QtGui.QVBoxLayout()
         
-        self.open_HorLayout = QtGui.QHBoxLayout()
+        self.open_hor_layout = QtGui.QHBoxLayout()
         
-        self.open_path = QtGui.QLineEdit(self.centralWidget)
-        self.open_path.setReadOnly(True)                                            #field for open path is not editable
-        self.button_open = QtGui.QPushButton(self.centralWidget)
+        self.open_edit = QtGui.QLineEdit(self.central_widget)
+        self.open_edit.setReadOnly(True)                                            #field for open path is not editable
+        self.open_button = QtGui.QPushButton(self.central_widget)
         
-        self.open_HorLayout.addWidget(self.open_path)
-        self.open_HorLayout.addWidget(self.button_open)
-        self.LeftVertLayout.addLayout(self.open_HorLayout)
+        self.open_hor_layout.addWidget(self.open_edit)
+        self.open_hor_layout.addWidget(self.open_button)
+        self.left_ver_layout.addLayout(self.open_hor_layout)
+        self.left_ver_layout.addStretch(1)
         #------------------------------------------
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.LeftVertLayout.addItem(spacerItem)
-        #------------------------------------------
-        self.line_1 = QtGui.QFrame(self.centralWidget)
+        self.line_1 = QtGui.QFrame(self.central_widget)
         self.line_1.setFrameShape(QtGui.QFrame.HLine)
         self.line_1.setFrameShadow(QtGui.QFrame.Sunken)
-        self.LeftVertLayout.addWidget(self.line_1)
+        self.left_ver_layout.addWidget(self.line_1)
         #------------------------------------------
-        self.name_Grid = QtGui.QGridLayout()
-        self.label_name = QtGui.QLabel(self.centralWidget)
-        self.label_surname = QtGui.QLabel(self.centralWidget)
-        self.name = QtGui.QLineEdit(self.centralWidget)
-        self.surname = QtGui.QLineEdit(self.centralWidget)
-        
-        self.name_Grid.addWidget(self.label_name, 0, 0, 1, 1)     
-        self.name_Grid.addWidget(self.label_surname, 1, 0, 1, 1)
-        self.name_Grid.addWidget(self.name, 0, 1, 1, 1)
-        self.name_Grid.addWidget(self.surname, 1, 1, 1, 1)
-        self.LeftVertLayout.addLayout(self.name_Grid)
+        self.txt_grid = QtGui.QGridLayout()
+        self.txt_label = QtGui.QLabel()
+        self.name_label = QtGui.QLabel(self.central_widget)
+        self.surname_label = QtGui.QLabel(self.central_widget)
+        self.name_edit = QtGui.QLineEdit(self.central_widget)
+        self.surname_edit = QtGui.QLineEdit(self.central_widget)
+        self.txt_grid.addWidget(self.name_label, 0, 0, 1, 1)     
+        self.txt_grid.addWidget(self.surname_label, 1, 0, 1, 1)
+        self.txt_grid.addWidget(self.name_edit, 0, 1, 1, 1)
+        self.txt_grid.addWidget(self.surname_edit, 1, 1, 1, 1)
+        self.left_ver_layout.addWidget(self.txt_label)
+        self.left_ver_layout.addLayout(self.txt_grid)
         #------------------------------------------
-        self.line_2 = QtGui.QFrame(self.centralWidget)
+        self.line_2 = QtGui.QFrame(self.central_widget)
         self.line_2.setFrameShape(QtGui.QFrame.HLine)
         self.line_2.setFrameShadow(QtGui.QFrame.Sunken)
-        self.LeftVertLayout.addWidget(self.line_2)
+        self.left_ver_layout.addWidget(self.line_2)
         #------------------------------------------
-        self.textcolor_Grid = QtGui.QGridLayout()
-        self.buttonGroup_TextColor = QtGui.QButtonGroup(self)
+        self.txtcolor_label = QtGui.QLabel()
+        self.white_radio = QtGui.QRadioButton()
+        self.white_radio.setChecked(True)
+        self.black_radio = QtGui.QRadioButton()
         
-        self.radio_White = QtGui.QRadioButton(self.centralWidget)
-        self.radio_White.setChecked(True)
-        self.radio_Black = QtGui.QRadioButton(self.centralWidget)
-        
-        self.buttonGroup_TextColor.addButton(self.radio_White)
-        self.textcolor_Grid.addWidget(self.radio_White, 1, 0, 1, 1)
-        self.buttonGroup_TextColor.addButton(self.radio_Black)
-        self.textcolor_Grid.addWidget(self.radio_Black, 2, 0, 1, 1)
-        
-        self.label_textcolor = QtGui.QLabel(self.centralWidget)
-        self.textcolor_Grid.addWidget(self.label_textcolor, 0, 1, 1, 1)
-        
-        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.textcolor_Grid.addItem(spacerItem1, 0, 2, 1, 1)
-        
-        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.textcolor_Grid.addItem(spacerItem2, 0, 0, 1, 1)
-        self.LeftVertLayout.addLayout(self.textcolor_Grid)
+        self.left_ver_layout.addWidget(self.txtcolor_label)
+        self.left_ver_layout.addWidget(self.white_radio)
+        self.left_ver_layout.addWidget(self.black_radio)
         #------------------------------------------
-        self.line_3 = QtGui.QFrame(self.centralWidget)
+        self.line_3 = QtGui.QFrame(self.central_widget)
         self.line_3.setFrameShape(QtGui.QFrame.HLine)
         self.line_3.setFrameShadow(QtGui.QFrame.Sunken)
-        self.LeftVertLayout.addWidget(self.line_3)
+        self.left_ver_layout.addWidget(self.line_3)
         #------------------------------------------
-        self.placetext_Grid = QtGui.QGridLayout()
-        self.label_wherePlace = QtGui.QLabel(self.centralWidget)
+        self.txtplace_label = QtGui.QLabel()
+        self.txtplace_grid = QtGui.QGridLayout()
+        self.leftupper_radio = QtGui.QRadioButton()
+        self.leftupper_radio.setObjectName("left_upper")
+        self.leftlower_radio = QtGui.QRadioButton()
+        self.leftlower_radio.setObjectName("left_lower")
+        self.rightupper_radio = QtGui.QRadioButton()
+        self.rightupper_radio.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.rightupper_radio.setObjectName("right_upper")
+        self.rightlower_radio = QtGui.QRadioButton()
+        self.rightlower_radio.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.rightlower_radio.setObjectName("right_lower")
         
-        self.placetext_Grid.addWidget(self.label_wherePlace, 2, 0, 1, 1)
+        self.txtplace_group = QtGui.QButtonGroup()
+        self.txtplace_group.addButton(self.leftupper_radio)
+        self.txtplace_group.addButton(self.leftlower_radio)
+        self.txtplace_group.addButton(self.rightupper_radio)
+        self.txtplace_group.addButton(self.rightlower_radio)
+        self.leftupper_radio.setChecked(True)
         
-        self.grid_radio_placetext = QtGui.QGridLayout()
+        self.txtplace_grid.addWidget(self.leftupper_radio, 0, 0, 1, 1)
+        self.txtplace_grid.addWidget(self.leftlower_radio, 1, 0, 1, 1)
+        self.txtplace_grid.addWidget(self.rightupper_radio, 0, 1, 1, 1)
+        self.txtplace_grid.addWidget(self.rightlower_radio, 1, 1, 1, 1)
         
-        self.radio_leftupper = QtGui.QRadioButton(self.centralWidget)
+        self.left_ver_layout.addWidget(self.txtplace_label)
+        self.left_ver_layout.addLayout(self.txtplace_grid)
         
-        self.radio_leftupper.setChecked(True)
-        self.radio_leftupper.setObjectName("left_upper")
-        self.buttonGroup_PlaceText = QtGui.QButtonGroup(self)
-        self.buttonGroup_PlaceText.addButton(self.radio_leftupper)
-        self.grid_radio_placetext.addWidget(self.radio_leftupper, 0, 0, 1, 1)
-        
-        self.radio_leftlower = QtGui.QRadioButton(self.centralWidget)
-        self.radio_leftlower.setObjectName("left_lower")
-        self.buttonGroup_PlaceText.addButton(self.radio_leftlower)
-        self.grid_radio_placetext.addWidget(self.radio_leftlower, 1, 0, 1, 1)   
-        
-        self.radio_rightupper = QtGui.QRadioButton(self.centralWidget)
-        self.radio_rightupper.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.radio_rightupper.setObjectName("right_upper")
-        self.buttonGroup_PlaceText.addButton(self.radio_rightupper)
-        self.grid_radio_placetext.addWidget(self.radio_rightupper, 0, 1, 1, 1)
-        
-        self.radio_rightlower = QtGui.QRadioButton(self.centralWidget)
-        self.radio_rightlower.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.radio_rightlower.setObjectName("right_lower")
-        self.buttonGroup_PlaceText.addButton(self.radio_rightlower)
-        self.grid_radio_placetext.addWidget(self.radio_rightlower, 1, 1, 1, 1)
-        
-        self.placetext_Grid.addLayout(self.grid_radio_placetext, 3, 0, 1, 1)
-        self.LeftVertLayout.addLayout(self.placetext_Grid)
         #------------------------------------------
-        self.line_4 = QtGui.QFrame(self.centralWidget)
+        self.line_4 = QtGui.QFrame(self.central_widget)
         self.line_4.setFrameShape(QtGui.QFrame.HLine)
         self.line_4.setFrameShadow(QtGui.QFrame.Sunken)
-        self.LeftVertLayout.addWidget(self.line_4)
+        self.left_ver_layout.addWidget(self.line_4)
         #------------------------------------------
-        self.slide_HorLayout = QtGui.QHBoxLayout()
-        self.check_slide = QtGui.QCheckBox(self.centralWidget)
+        self.slide_check = QtGui.QCheckBox(self.central_widget)
+        self.create_button = QtGui.QPushButton(self.central_widget)
         
-        self.slide_HorLayout.addWidget(self.check_slide)
-        #spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        #self.slide_HorLayout.addItem(spacerItem3)
-        self.LeftVertLayout.addLayout(self.slide_HorLayout)
+        self.left_ver_layout.addWidget(self.slide_check)
+        self.left_ver_layout.addWidget(self.create_button)
         #------------------------------------------
-        self.button_create = QtGui.QPushButton(self.centralWidget)
-        self.LeftVertLayout.addWidget(self.button_create)
-        #------------------------------------------
-        self.main_layout.addLayout(self.LeftVertLayout)
-        self.RightVertLayout = QtGui.QVBoxLayout()
+        self.main_layout.addLayout(self.left_ver_layout)
+        self.right_ver_layout = QtGui.QVBoxLayout()
         
-        self.label_image = QtGui.QLabel(self.centralWidget)
-        self.label_image.setStyleSheet(_fromUtf8("border-style: solid;\n"
+        self.image_label = QtGui.QLabel(self.central_widget)
+        self.image_label.setStyleSheet(_fromUtf8("border-style: solid;\n"
                                                  "border-width: 1px;\n"
                                                  "border-color: white;"))
-        self.RightVertLayout.addWidget(self.label_image)
+        self.right_ver_layout.addWidget(self.image_label)
         #------------------------------------------
-        self.grid_arrows = QtGui.QGridLayout()
-        self.button_up = QtGui.QPushButton(self.centralWidget)
-        self.button_up.setObjectName("button_up")
-        self.grid_arrows.addWidget(self.button_up, 0, 1, 1, 1, QtCore.Qt.AlignBottom)
-        self.button_left = QtGui.QPushButton(self.centralWidget)
+        self.arrows_grid = QtGui.QGridLayout()
+        self.up_button = QtGui.QPushButton()
+        self.up_button.setObjectName("up_button")
+        self.button_left = QtGui.QPushButton()
         self.button_left.setObjectName("button_left")
-        self.grid_arrows.addWidget(self.button_left, 1, 0, 1, 1, QtCore.Qt.AlignRight)
-        self.button_right = QtGui.QPushButton(self.centralWidget)
+        self.button_right = QtGui.QPushButton()
         self.button_right.setObjectName("button_right")
-        self.grid_arrows.addWidget(self.button_right, 1, 2, 1, 1, QtCore.Qt.AlignLeft)
-        self.button_down = QtGui.QPushButton(self.centralWidget)
+        self.button_down = QtGui.QPushButton(self.central_widget)
         self.button_down.setObjectName("button_down")
-        self.grid_arrows.addWidget(self.button_down, 2, 1, 1, 1, QtCore.Qt.AlignTop)
-        self.RightVertLayout.addLayout(self.grid_arrows) 
+        
+        self.arrows_grid.addWidget(self.up_button, 0, 1, 1, 1, QtCore.Qt.AlignBottom)
+        self.arrows_grid.addWidget(self.button_left, 1, 0, 1, 1, QtCore.Qt.AlignRight)
+        self.arrows_grid.addWidget(self.button_right, 1, 2, 1, 1, QtCore.Qt.AlignLeft)
+        self.arrows_grid.addWidget(self.button_down, 2, 1, 1, 1, QtCore.Qt.AlignTop)
+        self.right_ver_layout.addLayout(self.arrows_grid)
         #------------------------------------------
-        self.main_layout.addLayout(self.RightVertLayout)
-        self.setCentralWidget(self.centralWidget)
-        self.menuBar = QtGui.QMenuBar(self)
-        self.menuMain = QtGui.QMenu(self.menuBar)
-        self.setMenuBar(self.menuBar)
-        self.statusBar = QtGui.QStatusBar(self)
-        self.setStatusBar(self.statusBar)
-        self.menuLanguage = QtGui.QMenu(self.menuMain)
-        self.actionEnglish = QtGui.QAction(self)
-        self.actionEnglish.setObjectName("en")
-        self.actionRussian = QtGui.QAction(self)
-        self.actionRussian.setObjectName("ru")
-        self.actionUkrainian = QtGui.QAction(self)
-        self.actionUkrainian.setObjectName("ukr")
-        self.menuLanguage.addAction(self.actionEnglish)
-        self.menuLanguage.addAction(self.actionRussian)
-        self.menuLanguage.addAction(self.actionUkrainian)
-        self.menuMain.addAction(self.menuLanguage.menuAction())
+        self.main_layout.addLayout(self.right_ver_layout)
+        self.setCentralWidget(self.central_widget)
+        self.menu_bar = QtGui.QMenuBar(self)
+        self.menu = QtGui.QMenu(self.menu_bar)
+        self.setMenuBar(self.menu_bar)
+        self.status_bar = QtGui.QStatusBar(self)
+        self.setStatusBar(self.status_bar)
+        self.language_menu = QtGui.QMenu(self.menu)
+        self.english_action = QtGui.QAction(self)
+        self.english_action.setObjectName("en")
+        self.russian_action = QtGui.QAction(self)
+        self.russian_action.setObjectName("ru")
+        self.ukrainian_action = QtGui.QAction(self)
+        self.ukrainian_action.setObjectName("ukr")
+        self.language_menu.addAction(self.english_action)
+        self.language_menu.addAction(self.russian_action)
+        self.language_menu.addAction(self.ukrainian_action)
+        self.menu.addAction(self.language_menu.menuAction())
         self.action_Exit = QtGui.QAction(self)
-        self.menuMain.addAction(self.action_Exit)
-        self.menuBar.addAction(self.menuMain.menuAction())
+        self.menu.addAction(self.action_Exit)
+        self.menu_bar.addAction(self.menu.menuAction())
         
         self.centerUI()
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def setSizeUI(self):
         
-        self.open_path.setMinimumSize(QtCore.QSize(0, 20))
-        self.button_open.setMinimumSize(QtCore.QSize(0, 20))
-        self.radio_White.setMinimumSize(QtCore.QSize(0, 20))
-        self.radio_Black.setMinimumSize(QtCore.QSize(0, 20))
-        self.label_textcolor.setMinimumSize(QtCore.QSize(0, 20))
-        self.label_wherePlace.setMinimumSize(QtCore.QSize(0, 20))
-        self.radio_leftupper.setMinimumSize(QtCore.QSize(0, 20))
-        self.radio_leftlower.setMinimumSize(QtCore.QSize(0, 20))
-        self.radio_rightupper.setMinimumSize(QtCore.QSize(0, 20))
-        self.radio_rightlower.setMinimumSize(QtCore.QSize(0, 20))
-        self.button_create.setMinimumSize(QtCore.QSize(0, 20))
-        self.label_image.setMinimumSize(QtCore.QSize(300, 400))
-        self.label_image.setMaximumSize(QtCore.QSize(300, 400))
+        self.open_edit.setMinimumSize(QtCore.QSize(0, 20))
+        self.open_button.setMinimumSize(QtCore.QSize(0, 20))
+        self.white_radio.setMinimumSize(QtCore.QSize(0, 20))
+        self.black_radio.setMinimumSize(QtCore.QSize(0, 20))
+        self.txtcolor_label.setMinimumSize(QtCore.QSize(0, 20))
+        self.txtplace_label.setMinimumSize(QtCore.QSize(0, 20))
+        self.leftupper_radio.setMinimumSize(QtCore.QSize(0, 20))
+        self.leftlower_radio.setMinimumSize(QtCore.QSize(0, 20))
+        self.rightupper_radio.setMinimumSize(QtCore.QSize(0, 20))
+        self.rightlower_radio.setMinimumSize(QtCore.QSize(0, 20))
+        self.create_button.setMinimumSize(QtCore.QSize(0, 20))
+        self.image_label.setMinimumSize(QtCore.QSize(300, 400))
+        self.image_label.setMaximumSize(QtCore.QSize(300, 400))
         
-        self.button_up.setMinimumSize(QtCore.QSize(35, 35))
-        self.button_up.setMaximumSize(QtCore.QSize(35, 35))
+        self.up_button.setMinimumSize(QtCore.QSize(35, 35))
+        self.up_button.setMaximumSize(QtCore.QSize(35, 35))
         self.button_left.setMinimumSize(QtCore.QSize(35, 35))
         self.button_left.setMaximumSize(QtCore.QSize(35, 35))
         self.button_right.setMinimumSize(QtCore.QSize(35, 35))
@@ -576,7 +549,7 @@ class Window(QtGui.QMainWindow):
         self.button_down.setMinimumSize(QtCore.QSize(35, 35))
         self.button_down.setMaximumSize(QtCore.QSize(35, 35))
         
-        #self.menuBar.setGeometry(QtCore.QRect(0, 0, 648, 20))
+        #self.menu_bar.setGeometry(QtCore.QRect(0, 0, 648, 20))
         
     def retranslateUI(self):
         self.setWindowTitle("All Kindle ScreenSaver Creator")
@@ -585,34 +558,35 @@ class Window(QtGui.QMainWindow):
         #im = QtGui.QImageReader(ICON).read()
         #self.setWindowIcon(QtGui.QIcon(QtGui.QPixmap.fromImage(ICON))
         self.setWindowIcon(QtGui.QIcon(ICON))
-        self.button_open.setText(self.tr("Open..."))
-        self.label_name.setText(self.tr("Name"))
-        self.label_surname.setText(self.tr("Surname"))
-        self.radio_White.setText(self.tr("White"))
-        self.radio_Black.setText(self.tr("Black"))
-        self.label_textcolor.setText(self.tr("<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Text color</span></p></body></html>"))
-        self.label_wherePlace.setText(self.tr("<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Where to place text</span></p></body></html>"))
-        self.radio_leftupper.setText(self.tr("Left Upper"))
-        self.radio_rightlower.setText(self.tr("Right Lower"))
-        self.radio_leftlower.setText(self.tr("Left Lower"))
-        self.radio_rightupper.setText(self.tr("Right Upper"))
+        self.open_button.setText(self.tr("Open..."))
+        self.txt_label.setText(self.tr("<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Text</span></p></body></html>"))
+        self.name_label.setText(self.tr("Name"))
+        self.surname_label.setText(self.tr("Surname"))
+        self.white_radio.setText(self.tr("White"))
+        self.black_radio.setText(self.tr("Black"))
+        self.txtcolor_label.setText(self.tr("<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Text color</span></p></body></html>"))
+        self.txtplace_label.setText(self.tr("<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Where to place text</span></p></body></html>"))
+        self.leftupper_radio.setText(self.tr("Left Upper"))
+        self.rightlower_radio.setText(self.tr("Right Lower"))
+        self.leftlower_radio.setText(self.tr("Left Lower"))
+        self.rightupper_radio.setText(self.tr("Right Upper"))
         
-        self.check_slide.setText("")
-        self.button_create.setText(self.tr("Create"))
-        self.button_up.setText("\N{UPWARDS ARROW}")
-        self.button_up.setShortcut("Up")
+        self.slide_check.setText("")
+        self.create_button.setText(self.tr("Create"))
+        self.up_button.setText("\N{UPWARDS ARROW}")
+        self.up_button.setShortcut("Up")
         self.button_left.setText("\N{LEFTWARDS ARROW}")
         self.button_left.setShortcut("Left")
         self.button_right.setText("\N{RIGHTWARDS ARROW}")
         self.button_right.setShortcut("Right")
         self.button_down.setText("\N{DOWNWARDS ARROW}")
         self.button_down.setShortcut("Down")
-        self.menuMain.setTitle(self.tr("Main"))
+        self.menu.setTitle(self.tr("Main"))
         self.action_Exit.setText(self.tr("Exit"))
-        self.menuLanguage.setTitle(self.tr("Language"))
-        self.actionEnglish.setText("English")
-        self.actionRussian.setText("Русский")
-        self.actionUkrainian.setText("Українська")
+        self.language_menu.setTitle(self.tr("Language"))
+        self.english_action.setText("English")
+        self.russian_action.setText("Русский")
+        self.ukrainian_action.setText("Українська")
         
         self.setSizeUI()
     
@@ -625,50 +599,50 @@ class Window(QtGui.QMainWindow):
         
     def initStateUI(self):
         
-        self.name.setEnabled(False)
-        self.surname.setEnabled(False)
-        self.radio_leftlower.setEnabled(False)
-        self.radio_leftupper.setEnabled(False)
-        self.radio_rightlower.setEnabled(False)
-        self.radio_rightupper.setEnabled(False)
-        self.radio_Black.setEnabled(False)
-        self.radio_White.setEnabled(False)
-        self.check_slide.setEnabled(False)
+        self.name_edit.setEnabled(False)
+        self.surname_edit.setEnabled(False)
+        self.leftlower_radio.setEnabled(False)
+        self.leftupper_radio.setEnabled(False)
+        self.rightlower_radio.setEnabled(False)
+        self.rightupper_radio.setEnabled(False)
+        self.black_radio.setEnabled(False)
+        self.white_radio.setEnabled(False)
+        self.slide_check.setEnabled(False)
         self.button_left.setEnabled(False)
         self.button_right.setEnabled(False)
-        self.button_up.setEnabled(False)
+        self.up_button.setEnabled(False)
         self.button_down.setEnabled(False)
-        self.button_create.setEnabled(False)
+        self.create_button.setEnabled(False)
     
     def surnameState(self):
         
-        enabled = bool(self.name.text())
-        self.surname.setEnabled(enabled)
-        self.radio_leftlower.setEnabled(enabled)
-        self.radio_leftupper.setEnabled(enabled)
-        self.radio_rightlower.setEnabled(enabled)
-        self.radio_rightupper.setEnabled(enabled)
-        self.radio_Black.setEnabled(enabled)
-        self.radio_White.setEnabled(enabled)
+        enabled = bool(self.name_edit.text())
+        self.surname_edit.setEnabled(enabled)
+        self.leftlower_radio.setEnabled(enabled)
+        self.leftupper_radio.setEnabled(enabled)
+        self.rightlower_radio.setEnabled(enabled)
+        self.rightupper_radio.setEnabled(enabled)
+        self.black_radio.setEnabled(enabled)
+        self.white_radio.setEnabled(enabled)
         self.button_left.setEnabled(enabled)
         self.button_right.setEnabled(enabled)
-        self.button_up.setEnabled(enabled)
+        self.up_button.setEnabled(enabled)
         self.button_down.setEnabled(enabled)
-        self.label_textcolor.setEnabled(enabled)
-        self.label_wherePlace.setEnabled(enabled)
+        self.txtcolor_label.setEnabled(enabled)
+        self.txtplace_label.setEnabled(enabled)
         if not enabled:
-            self.surname.setText("")
+            self.surname_edit.setText("")
             
     def putImage(self):
         
         pixmap = QtGui.QPixmap.fromImage(ImageQt.ImageQt(self.im))
-        pixmap = pixmap.scaled(self.label_image.size())
-        self.label_image.setPixmap(pixmap)
+        pixmap = pixmap.scaled(self.image_label.size())
+        self.image_label.setPixmap(pixmap)
     
     def redrawImage(self):
         
-        self.is_label = self.check_slide.isChecked()
-        self.is_text = self.name.text() or self.surname.text()
+        self.is_label = self.slide_check.isChecked()
+        self.is_text = self.name_edit.text() or self.surname_edit.text()
         self.pasteImage()
                 
         if self.is_label:
@@ -679,23 +653,24 @@ class Window(QtGui.QMainWindow):
             draw = ImageDraw.Draw(self.im)
             font = ImageFont.truetype(FONT, FONT_SIZE)
             text_color = "White"
-            if self.radio_Black.isChecked():
+            if self.black_radio.isChecked():
                 text_color = "Black"
             else:
                 text_color = "White"
             
             self.correctText(font=font, size=size)
-            #draw name
-            if self.name.text():
-                draw.text((self.text_x, self.text_y), self.name.text(), text_color, font=font)
-            #draw surname
-            if self.surname.text():
-                draw.text((self.text_x, self.text_y + size), self.surname.text(), text_color, font=font)
+            #draw name_edit
+            if self.name_edit.text():
+                draw.text((self.text_x, self.text_y), self.name_edit.text(), text_color, font=font)
+            #draw surname_edit
+            if self.surname_edit.text():
+                draw.text((self.text_x, self.text_y + size), self.surname_edit.text(), text_color, font=font)
 
         self.putImage()
 
     def moveText(self):
-        default_move = {"button_up"  : (0, -10),
+        '''moving text by arrows'''
+        default_move = {"up_button"  : (0, -10),
                         "button_left" : (-10, 0),
                         "button_right" : (10, 0),
                         "button_down": (0, 10)}
@@ -704,7 +679,7 @@ class Window(QtGui.QMainWindow):
         self.redrawImage()
     
     def placeText(self, corner):
-        
+        '''default place for text - leftupper, leftlower etc'''
         default_coord = {"left_upper" : (self.text_frame, self.text_frame),
                           "left_lower" : (self.text_frame, self.im.size[1]),
                           "right_upper" : (self.im.size[0], self.text_frame),
@@ -714,14 +689,14 @@ class Window(QtGui.QMainWindow):
         self.redrawImage()
     
     def correctText(self, font, size):
-        
+        '''don't let text to go out of frame'''
         font = font
         size_x = self.im.size[0] - self.text_frame
         size_y = self.im.size[1] - self.text_frame - 50
         text_height = 0
         text_lenght = 0
-        name = self.name.text()
-        surname = self.surname.text()
+        name = self.name_edit.text()
+        surname = self.surname_edit.text()
         
         if self.text_x < self.text_frame: self.text_x = self.text_frame
         if self.text_y < self.text_frame: self.text_y = self.text_frame
@@ -754,7 +729,7 @@ class Window(QtGui.QMainWindow):
         if self.file_path == '':
             return
         if path.split(self.file_path)[-1].split('.')[1].lower() not in IMAGE_FORMATS:
-            self.statusBar.showMessage(self.tr('No image'))
+            self.status_bar.showMessage(self.tr('No image'))
             return
         
         #place for dialog crop
@@ -771,8 +746,8 @@ class Window(QtGui.QMainWindow):
             return
         
         #end of place for dialog crop
-        if not self.name.isEnabled():
-            self.name.setEnabled(True)
+        if not self.name_edit.isEnabled():
+            self.name_edit.setEnabled(True)
         
         kindle_version = ui.version_combo.currentText()
         if "Kindle 3" in kindle_version:
@@ -787,30 +762,30 @@ class Window(QtGui.QMainWindow):
             self.label = Image.open(LABEL_800).convert("RGBA")
         
         if "Kindle 3" in kindle_version or "Kindle DX" in kindle_version:
-            self.check_slide.setText("Slide and release the power to wake")
+            self.slide_check.setText("Slide and release the power to wake")
             self.text_x = self.text_y = self.text_frame = 10
         else:
-            self.check_slide.setText("Press the power switch to wake")
-        self.check_slide.setEnabled(True)
-        self.check_slide.setChecked(True)
+            self.slide_check.setText("Press the power switch to wake")
+        self.slide_check.setEnabled(True)
+        self.slide_check.setChecked(True)
         
-        if not self.radio_leftupper.isChecked():
-            self.radio_leftupper.setChecked(True)
-        if self.name.text():
-            self.name.setText("")
-        if self.surname.text():
-            self.surname.setText("")
-        self.label_image.setFixedWidth(self.clear_im.size[0]/2)
-        self.label_image.setFixedHeight(self.clear_im.size[1]/2)
+        if not self.leftupper_radio.isChecked():
+            self.leftupper_radio.setChecked(True)
+        if self.name_edit.text():
+            self.name_edit.setText("")
+        if self.surname_edit.text():
+            self.surname_edit.setText("")
+        self.image_label.setFixedWidth(self.clear_im.size[0]/2)
+        self.image_label.setFixedHeight(self.clear_im.size[1]/2)
         self.surnameState()
-        self.button_create.setEnabled(True)
+        self.create_button.setEnabled(True)
         #self.text_x = 10
         #self.text_y = 10
         self.redrawImage()
         self.centerUI()
         
-        self.open_path.setText(self.file_path)
-        self.statusBar.showMessage(self.tr("Opened file"))
+        self.open_edit.setText(self.file_path)
+        self.status_bar.showMessage(self.tr("Opened file"))
     
     def pasteImage(self):
         
@@ -822,10 +797,10 @@ class Window(QtGui.QMainWindow):
         default = self.tr("Sample")
         name = ""
         self.redrawImage()
-        if self.name.text():
-            name+=self.name.text()
-        if self.surname.text():
-            name+= ' ' + self.surname.text()
+        if self.name_edit.text():
+            name+=self.name_edit.text()
+        if self.surname_edit.text():
+            name+= ' ' + self.surname_edit.text()
         if not name:
             name = default
         name += ' ' + str(self.im.size[1]) + 'x' + str(self.im.size[0])
@@ -837,30 +812,30 @@ class Window(QtGui.QMainWindow):
             name+= '-' + str(i)
         name +=".png"
         self.im.save(path.join(SAVE_PATH, name))
-        self.statusBar.showMessage(self.tr("File {} created!").format(name))
+        self.status_bar.showMessage(self.tr("File {} created!").format(name))
             
     def initActions(self):
         
         self.action_Exit.triggered.connect(self.close)
-        self.check_slide.stateChanged.connect(self.redrawImage)
-        self.button_open.clicked.connect(self.openImage)
-        self.button_create.clicked.connect(self.saveImage)
-        self.name.textChanged.connect(self.redrawImage)
-        self.name.textChanged.connect(self.surnameState)
-        self.surname.textChanged.connect(self.redrawImage)
-        self.radio_Black.clicked.connect(self.redrawImage)
-        self.radio_White.clicked.connect(self.redrawImage)
-        self.radio_leftlower.clicked.connect(self.placeText)
-        self.radio_leftupper.clicked.connect(self.placeText)
-        self.radio_rightlower.clicked.connect(self.placeText)
-        self.radio_rightupper.clicked.connect(self.placeText)
-        self.button_up.pressed.connect(self.moveText)
+        self.slide_check.stateChanged.connect(self.redrawImage)
+        self.open_button.clicked.connect(self.openImage)
+        self.create_button.clicked.connect(self.saveImage)
+        self.name_edit.textChanged.connect(self.redrawImage)
+        self.name_edit.textChanged.connect(self.surnameState)
+        self.surname_edit.textChanged.connect(self.redrawImage)
+        self.black_radio.clicked.connect(self.redrawImage)
+        self.white_radio.clicked.connect(self.redrawImage)
+        self.leftlower_radio.clicked.connect(self.placeText)
+        self.leftupper_radio.clicked.connect(self.placeText)
+        self.rightlower_radio.clicked.connect(self.placeText)
+        self.rightupper_radio.clicked.connect(self.placeText)
+        self.up_button.pressed.connect(self.moveText)
         self.button_down.pressed.connect(self.moveText)
         self.button_left.pressed.connect(self.moveText)
         self.button_right.pressed.connect(self.moveText)
-        self.actionRussian.triggered.connect(self.translateUI)
-        self.actionEnglish.triggered.connect(self.translateUI)
-        self.actionUkrainian.triggered.connect(self.translateUI)
+        self.russian_action.triggered.connect(self.translateUI)
+        self.english_action.triggered.connect(self.translateUI)
+        self.ukrainian_action.triggered.connect(self.translateUI)
     
     def translateUI(self, no_sent = False):
         
@@ -879,13 +854,13 @@ class Window(QtGui.QMainWindow):
         
     
     def saveUI(self):
-        
+        '''save default version and language'''
         self.settings = QtCore.QSettings("src/src.ini", QtCore.QSettings.IniFormat)
         self.settings.setValue("language", self.language)
         self.settings.setValue("version", self.version)
         
     def loadUI(self):
-        
+        '''load saved version and language'''
         self.settings = QtCore.QSettings("src/src.ini", QtCore.QSettings.IniFormat)
         self.language = self.settings.value("language")
         self.version = int(self.settings.value("version"))
@@ -896,7 +871,6 @@ class Window(QtGui.QMainWindow):
         self.translateUI(no_sent=True)
         
     def closeEvent(self, event):
-        
         self.saveUI()
         
 def main():
